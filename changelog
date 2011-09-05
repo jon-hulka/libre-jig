@@ -1,0 +1,197 @@
+2011 06 06 - Jon
+	- JigsawHandler
+	 - bug fix: if two edges (three corners) were completed together, drag allowance wasn't permitting the edge of the resulting connected set to be on the board.
+	 - bug fix: Multi-select dragging allowed pieces to 'fall off' the edge and be lost. This was a result of negative width and heights in drag allowance calculations.
+	- PuzzleCanvas
+	 - Changed dragBuffer dimensions to allow for multi-select (pieces may be further apart)
+
+2011 03 18 - Jon
+	- GUI
+	 - Removed game menu handling from GUI (GUI no longer has any direct interaction with PuzzleHandler)
+	 - Started modifying code to work with PuzzleLoader instead of NewPuzzleDialog
+	- PuzzleHandler
+	 - Changed from interface to abstract class
+	 - Integrated GameMenuHandler functionality
+	 - Moved ui from PuzzleHandler implementations to PuzzleHandler (it is shared by all implementations)
+	- Created PuzzleLoader - still a lot to do before it comes together
+	- Deprecated GameMenuListener - all functions are in PuzzleHandler now.
+
+2011 03 15 - Jon
+ - PuzzleCanvas
+  - polished shift multi-select
+
+2011 02 14 - Jon
+ - PuzzleCanvas
+  - Implemented extended multi-select using shift key.
+2011 02 13 - Jon
+ - PuzzleCanvas, JigsawHandler
+  - Reintegrated selection highlighting into tile drawing.
+ - SpinnerHandler, SliderHandler
+  - Refactored to work with PuzzleCanvas modifications (see PuzzleCanvas 2011 02 12)
+
+2011 02 12 - Jon
+ - PuzzleCanvas, JigsawHandler
+  - Modified tile rendering code to keep rotated tiles in memory for improved performance.
+
+as of 2011 08 12 v.2011.08.11:
+
+2011 02 11 - Jon
+ - GUI, PuzzleHandler and implementations:
+  - Added onPreview to fix a user interface issue: simultaneous drag and preview was causing incorrect mouseCount in JigsawHandler.
+ - GUI
+  - New puzzle dialog comes up immediately after credits on game load.
+ - JigsawHandler
+  - Implemented tile rotation on click
+  - Disabled arrow key scrolling due to interference with tile rotation.
+
+2011 02 08 - Jon
+ - PuzzleCanvas
+  - Changed tile image rendering to use INTERPOLATION_BICUBIC rendering hint for smoother rotation.
+ - JigsawHandler:
+  - Changed tile snap algorithm: Positions are now adjusted to the largest on-board connected group.
+
+--- New changes above this line ---
+
+2010 08 11 - Jon
+ - PuzzleCanvas
+  - Changed background color logic
+ - Updated credits
+ - Prepared release candidate
+
+2010 08 10 - Jon
+ - documentation
+  - Updated and built separate help files for each puzzle
+  - Removed help->help and added help->Jigsaw, help->Sliding Tile, and help->Spinning Tile
+ - makefile
+   - updated and fixed broken/missing references
+ - hulka.gui.GUILoader
+  - Modified loadReader to correctly load the config file from within jar files.
+
+2010 08 09 - Jon
+ - NewPuzzleDialog:
+  - Fixed OK button bug (button was enabled before any selections made)
+ - JigsawHandler:
+  - Adjusted for a quirk/bug:
+    clicking on a menu, then click/dragging on the puzzle canvas fired a mouseUp with no mouseDown, causing mouseCount to become negative
+2010 08 04 - Jon
+ - hulka.util.ImageMap:
+  - Added mean color to image specification (xml)
+  - Added getMeanColor(int)
+ - PuzzleCanvas:
+  - Added setMeanColor (chooses a contrasting color for default background)
+
+2010 07 29 - Jon
+ - SpinnerHandler:
+   - Added logic to check for completed puzzle
+ - GUI
+   - Added logic to disable and enable menu items
+
+2010 07 27 Jon
+ - hulka.tilemanager.HexJigsawManager: Cleaned up and moved most of the edge clipping functionality into randomize()
+ - SliderHandler:
+   - Abstracted tilemanager creation code to NewPuzzleDialog
+   - This class now communicates with PuzzleCanvas, rather than GUI
+ - SpinnerHandler:
+   - Abstracted tilemanager creation code to NewPuzzleDialog
+   - This class now communicates with PuzzleCanvas, rather than GUI
+
+2010 07 26 - Jon
+ - hulka.tilemanager.HexJigsawManager: Enhanced initTilesetDescriptor and getTileMask functions:
+   Corner variance is now used for optimized tile sizing and edge adjustment.
+
+ - hulka.tilemanager.SquareJigsawManager: Made tile size optimization code more consistent with HexJigsawManager
+
+ - NewPuzzleDialog:
+   - Modified event handler code to reset piece count when other selections change.
+   - Changed default close ('x' button) behaviour to report no response (was defaulting to previous response).
+
+ - PuzzleCanvas: Changed contrast color mapping (for selection box) to hsb(h+0.5,1-s,1-b) for better contrast
+
+2010 07 09 - Jon
+ - hulka.tilemanager.SquareTileManager: fixed tileHeight calculation in initTilesetDescriptor: changed from boardHeight/tilesAcross to boardHeigh/tilesDown
+ - hulka.tilemanager.SquareJigsawManager: enhanced initTilesetDescriptor and randomize functions:
+   Corner variance is now used for optimized tile sizing and edge adjustment.
+
+2010 07 08 - Jon
+- hulka.gui.GUILoader: Added <mask> element for menu items - now ctrl, alt, and shift can and must be specified explicitly
+
+- Changed 'game' menu to 'file'
+- Created 'puzzle' menu for game options
+  - Layers
+  - Background color
+  - Preview
+Moved control of layers and preview to menu level
+Integrated color chooser for background color selection and made necessary changes to PuzzleCanvas and PuzzleHandler
+
+- JigsawHandler: debugged second button click issues.
+  Event handlers now keep a mouse count and only respond to the first mousePressed / last mouseReleased.
+  As a result, second clicks have no effect. This modifies previous behaviour, where second clicks acted as a mouseReleased.
+- JigsawHandler: reworked drag constraints.
+  Dragged tiles are now constrained by a dragAllowance rectangle that ensures each group is at least partly visible.
+
+2010 07 07 - Jon
+- JigsawHandler Implemented layers
+
+2010 07 06 - Jon
+- JigsawHandler Created temp variables for each function (Rectangles and Points).
+  This will require a tiny bit more memory usage, but will make future maintenance much easier.
+
+2010 06 29 - Jon
+ - fixed MouseSensetiveShapeManager.getIntersectingShapes - was not sorting by z-order
+ - fixed image centering in JigsawHandler.finishGame
+ 
+2010 06 28 - Jon
+ - Debugged multi-select
+
+2010 06 27 - Jon
+ - Modified tile dragging - now tiles cannot overlap edge of the board
+ - Integrated multi-select
+
+2010 06 27 - Jon
+ - Started implementing multiselect
+
+2010 06 18 - Jon
+ - Added getBoardWidth and getBoardHeight to TileManager
+
+2010 06 17 - Jon
+ - Debugged ConnectedSet. Jisaw puzzle is once again stable.
+ - Added isGameComplete and isGameSaved to PuzzleHandler interface
+ - Changed tile snapping in Jigsaw over to ConnectedSet.
+
+2010 06 16 - Jon
+ - Began retrofitting JigsawHandler to use ConnectedSet - ConnectedSet requires some debugging
+ 
+2010 06 14 Jon
+ - Worked out tile placement issues for JigsawHandler.
+ - Added focus request on JisawHandler mousedown.
+ - Added preview dialog to PuzzleCanvas
+ 
+2010 06 13 Jon
+ - Finished putting the pieces back together. There are still a couple glitches, and the spinner and slider puzzles aren't reintegrated.
+
+2010 06 11 Jon
+ - Moved JBufferedCanvas to package hulka.gui and cleaned up to make more consistent
+ - Created PuzzleCanvas to abstract the drawing functions from GUI
+ - Restructured PuzzleHandler to communicate with PuzzleCanvas, rather than GUI - GUI is now under 200 lines of code, was over 500
+ - Moved tilemanager creation code from PuzzleHandler implementations to NewPuzzleDialog - this code is in one class now, rather than three
+
+2010 06 10 Jon
+ - Changed JSimpleImageCombo to hide the popup menu as soon as the value is changed, in addition to on mouse click.
+   Previously, the popup would interfere with other dialogs that registered ActionListeners opened in response to ActionEvents.
+ - Eliminated StateHandler
+ - Moved setup code from StateHandler and PuzzleHandlers into NewPuzzleDialog
+ - Created GameMenuListener to handle load, save, new, and quit events
+
+2010 06 09 Jon
+- Added promptImageURL to MiscUtils
+
+2010 06 08  Jon
+ - Moved ImageSelectionList from puzzle games collection to package hulka.gui and renamed to ImageMap
+ - Changed the rendering component for JSimpleImageCombo and ImageListCellRenderer from JLabel to JButton to make the results more LAF compatible
+   - JSimpleImageCombo now extends JButton
+
+2010 06 07 - Jon
+- fixed a bug that was causing an index out of bounds exception after the puzzle was solved (MouseSensetiveShapeManager)
+- Upgraded menu building and handling code to use GUILoader (GUI and StateHandler)
+- the Nimbus look and feel is now used, if available (GUI)
+

@@ -1,0 +1,138 @@
+<gui>
+ <!--
+ Menus can be nested
+ Standard GUI actions:
+ application:exit
+ application:minimize
+ application:maximize
+ application:restore
+ application:hide
+ application:show
+ showdoc:docname (as defined ie <document> <name>docname</name> <path>docpath/doc.html</path> </document>)
+ -->
+	<application>
+		<icon>images/logo.png</icon>
+		<name>Virtual Toybox Puzzle Collection</name>
+		<version>2011.06.07 beta</version>
+	</application>
+
+	<document>
+		<name>help-jigsaw</name>
+		<path>help/jigsaw.html</path>
+	</document>
+
+	<document>
+		<name>help-slider</name>
+		<path>help/slider.html</path>
+	</document>
+
+	<document>
+		<name>help-spinner</name>
+		<path>help/spinner.html</path>
+	</document>
+
+	<document>
+		<name>credits</name>
+		<path>credits/credits.html</path>
+	</document>
+
+	<document>
+		<name>license</name>
+		<path>license/gpl-3.0-standalone.html</path>
+	</document>
+
+	<menubar>
+		<menu>
+			<name>File</name>
+			<item>
+				<name>New</name>
+				<shortcut>n</shortcut>
+				<accelerator>n</accelerator>
+				<mask>ctrl</mask>
+				<action>file:new</action>
+			</item>
+			<item>
+				<id>load</id>
+				<name>Open</name>
+				<shortcut>o</shortcut>
+				<accelerator>o</accelerator>
+				<mask>ctrl</mask>
+				<action>file:load</action>
+			</item>
+			<item>
+				<id>save</id>
+				<name>Save</name>
+				<shortcut>s</shortcut>
+				<accelerator>s</accelerator>
+				<mask>ctrl</mask>
+				<action>file:save</action>
+			</item>
+			<item>
+				<name>Quit</name>
+				<shortcut>q</shortcut>
+				<accelerator>q</accelerator>
+				<mask>ctrl</mask>
+				<action>file:quit</action>
+			</item>
+		</menu>
+		<menu>
+			<name>Puzzle</name>
+			<item>
+				<id>preview</id>
+				<name>Preview</name>
+				<shortcut>p</shortcut>
+				<accelerator>p</accelerator>
+				<action>game:preview</action>
+			</item>
+			<item>
+				<id>color</id>
+				<name>Color</name>
+				<action>game:color</action>
+			</item>
+			<item>
+				<id>layer1</id>
+				<name>Layer 1</name>
+				<shortcut>1</shortcut>
+				<accelerator>1</accelerator>
+				<action>game:layer1</action>
+			</item>
+			<item>
+				<id>layer2</id>
+				<name>Layer 2</name>
+				<shortcut>2</shortcut>
+				<accelerator>2</accelerator>
+				<action>game:layer2</action>
+			</item>
+			<item>
+				<id>layer3</id>
+				<name>Layer 3</name>
+				<shortcut>3</shortcut>
+				<accelerator>3</accelerator>
+				<action>game:layer3</action>
+			</item>
+		</menu>
+		<menu>
+			<name>Help</name>
+			<item>
+				<name>Jigsaw</name>
+				<action>showdoc:help-jigsaw</action>
+			</item>
+			<item>
+				<name>Sliding Tile</name>
+				<action>showdoc:help-slider</action>
+			</item>
+			<item>
+				<name>Spinning Tile</name>
+				<action>showdoc:help-spinner</action>
+			</item>
+			<item>
+				<name>Credits</name>
+				<action>showdoc:credits</action>
+			</item>
+			<item>
+				<name>License</name>
+				<action>showdoc:license</action>
+			</item>
+		</menu>
+	</menubar>
+</gui>

@@ -1,0 +1,69 @@
+vxxxx.xx.xx (software version)
+i<path>
+bw|h (boardsize)
+p0 (puzzle type - only jigsaw for now)
+sx (shape - 0 square or 1 hex for jigsaw)
+cn (piece count) followed by n values
+(x|y|r|c:)^n
+position/rotation/connected values
+
+
+on load
+>>>>- This release -<<<<
+ - Save-option for the current puzzle. Solving big puzzles needs a lot of
+time and that isn't always possible. Therefore it would be nice if the
+current puzzle will be saved for continues play at a later time.
+
+group option for multiselect - select pieces - press 'g' - pieces arranged as a grid
+
+Credits and help: browse error when clicking on links - is this a slackware config issue???
+
+>>>>- Next release -<<<<
+
+MouseSensetiveShapeManager efficiency
+
+Image rendering efficiency - are there ways to cut down on image processing?
+
+Make a 'child safe' mode - fullscreen with only game play and selection options and a key combination to exit.
+
+selection is pixellated - should be antialiased
+
+Have a 'send to a friend' feature - allow your own images.
+
+I'm looking for Puzzle making software that will allow me to post the puzzle online for kids to do.  Does your software allow for saving or exporting as html files to be posted on a website for others to do the puzzles?
+
+Wondering if you game works of a feed (rss,xml) or repository of images? Similar to flicker for example?
+
+Implement a webstart version:
+ - collections/images download from the site and can be cached locally in .virtualtoybox/puzzlegames/collections
+ - can webstart be initialized with a parameter, could just have collection links (js nature photos, riya thore, etc...)
+
+
+
+- The photos are awsome. No ideas here, i guess there's no way to do it
+better :D.
+
+- Sort-display-funtion. Just something that rearranges the puzzle-pieces
+in a "grid"-way. So if i've sorted the puzzle-pieces, many lay above
+others. Would be cool to get em all back in a sorted view (rows and
+cols) with one click.
+
+
+
+- The layers are a very cool feature. I love it! Would it be possible to
+have a background-transparency to be able to see the pieces at a lower
+layer shine through, if wanted? That would also make solving puzzles a
+little easier.
+
+- Zoom-Zoom. I would be happy if there is a zoom-function, so that i'm
+able to scale the puzzle-pieces at my needs. Especially useful for low
+desktop resolutions and high number of puzzle-pieces.
+
+1. Ability to be able to zoom out to avoid the messy look and have the ability to be more organized.
+You have three layers to organize in other tables but also having the ability to zoom out would be fine.
+But would be worse, you know better - my experience in puzzled is limited.
+
+***could the board scale larger while the pieces remain same size at their relative positions???
+***slider-zoom level
+
+Do you plan on a version of games that would work in a browser directly?
