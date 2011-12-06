@@ -1,5 +1,5 @@
 /**
- *      JigsawTileSet.java
+ *      ConnectedSet.java
  *      
  *      Copyright 2010 Jonathan Hulka <jon.hulka@gmail.com>
  *      
@@ -288,7 +288,7 @@ public class ConnectedSet
 		out.println("connected:count");
 		for(int i=0;i<connectedIndex.length;i++)
 		{
-			out.println(connectedIndex[i]+":"+connectedCount[i]);
+			out.println(i+":"+connectedIndex[i]+":"+connectedCount[i]);
 		}
 		return true;
 	}

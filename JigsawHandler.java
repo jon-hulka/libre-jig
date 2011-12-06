@@ -339,15 +339,16 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 	 */
 	private void dropConnectedTiles(int tileIndex,ConnectedSet tileSet)
 	{
-		//Adjust z indices
 		int tileCount=tileSet.getGroupSize(tileIndex);
+		//Add connected tiles to z-indices (they will be placed underneath smaller sets)
 		int offset=tileSet.insertConnectedElements(tileIndex,zIndices);
+		//Adjust z-indices for affected tiles
 		for(int i=0;i<tileCount+offset;i++)
 		{
 			if(zIndices[i]>=0) tiles[zIndices[i]].setZOrder(i);
 		}
 
-		//insert the connected tiles.
+		//insert the connected tiles into boardManager (mouse events).
 		tileSet.setGroup(tileIndex);
 		for(int i=tileSet.getNext(); i>=0; i=tileSet.getNext())
 		{
@@ -363,6 +364,8 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 	//Adjust as necessary. Currently one third total width or height.
 	private int gdaEdgeFactor=3;
 	/**
+	 * Ensures that a set of connected tiles can be dragged partly off the display area without hiding all of its tiles.
+	 * As long as the returned Rectangle is entirely in the display area, a reasonable piece of the connected set will be visible and available for mouse events.
 	 * 
 	 * @param tileIndex index of any tile in the connected set.
 	 * @param tileSet the ConnectedSet to operate on.
@@ -372,12 +375,14 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 	 */
 	private Rectangle getDragAllowance(int tileIndex,ConnectedSet tileSet,Rectangle bounds,Rectangle result)
 	{
-		//Adjust as necessary. Currently one half total width or height.
+		//Adjust as necessary. Currently one half tile width or height.
 		int hAllowance=tileWidth/2;
 		int vAllowance=tileHeight/2;
 //2011 06 06 - fixed bug - if two edges are completed together, drag allowance wasn't permitting the resulting set to be on the board.
 //		int hAllowance=bounds.width/2;
 //		int vAllowance=bounds.height/2;
+
+		//Set up edge rectangles - at least one tile will intersect each of these
 		//Top edge
 		copyRect(bounds,gdaTop);
 		gdaTop.height/=gdaEdgeFactor;
@@ -417,28 +422,28 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 			//See if the improved allowances apply
 			if(r.intersects(gdaTop))
 			{
-				//This tile will show if the selection is dragged as far down as possible.
+				//This tile will be visible if the selection is dragged as far down as possible.
 				//Adjust left and right margins accordingly.
 				if(left>tl)tl=left;
 				if(right<tr)tr=right;
 			}
 			if(r.intersects(gdaBottom))
 			{
-				//This tile will show if the selection is dragged as far up as possible.
+				//This tile will be visible if the selection is dragged as far up as possible.
 				//Adjust left and right margins accordingly.
 				if(left>bl)bl=left;
 				if(right<br)br=right;
 			}
 			if(r.intersects(gdaLeft))
 			{
-				//This tile will show if the selection is dragged as far right as possible.
+				//This tile will be visible if the selection is dragged as far right as possible.
 				//Adjust top and bottom margins accordingly.
 				if(top>lt)lt=top;
 				if(bottom<lb)lb=bottom;
 			}
 			if(r.intersects(gdaRight))
 			{
-				//This tile will show if the selection is dragged as far left as possible.
+				//This tile will be visible if the selection is dragged as far left as possible.
 				//Adjust top and bottom margins accordingly.
 				if(top>rt)rt=top;
 				if(bottom<rb)rb=bottom;
@@ -468,15 +473,16 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 		int groupSize=tileSet.getGroupSize(tileIndex);
 
 		result=getConnectedBounds(tileIndex,tileSet,result);
-		//remove the connected tiles
+		//remove the connected tiles from the boardManager (mouse events)
 		tileSet.setGroup(tileIndex);
 		for(int i=tileSet.getNext();i>=0;i=tileSet.getNext())
 		{
 			boardManager.removeShape(tiles[i]);
 		}
 		
-		//Adjust z-indices
+		//remove the connected tiles from the z-indices (they will be moved to the beginning of the list)
 		int endIndex=tileSet.removeConnectedElements(tileIndex,zIndices);
+		//Adjust z-indices for tiles still on the board
 		for(int i=groupSize;i<endIndex;i++)
 		{
 			if(zIndices[i]>=0) tiles[zIndices[i]].setZOrder(i);
@@ -553,8 +559,11 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 			boolean processed=false;
 			if(selectedGroup<0 && mouseEvent.isShiftDown())
 			{
+				//Select a single tile
 				setSelection(tileIndex);
+				//Prepare to repaint the affected area
 				ui.clear(dragBounds);
+				//Redraw the foreground (drag) buffer
 				ui.drawTile(dragBounds,null,PuzzleCanvas.DRAW_DRAGBUFFER,PuzzleCanvas.DRAW_FOREGROUND);
 				ui.repaint(dragBounds);
 			}
@@ -571,9 +580,12 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 				{
 					//Extending a multi-select
 					extendingSelection=true;
+					//Add a single tile to the selection
 					setSelection(tileIndex);
 					extendingSelection=false;
+					//Prepare to repaint the affected area
 					ui.clear(dragBounds);
+					//Redraw the foreground (drag) buffer
 					ui.drawTile(dragBounds,null,PuzzleCanvas.DRAW_DRAGBUFFER,PuzzleCanvas.DRAW_FOREGROUND);
 					ui.repaint(dragBounds);
 					//Let the other mousePressed handler know that this has been caught
@@ -820,10 +832,14 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 			{
 				//Multi-select
 				mrBounds=correctRectangle(selectBounds,mrBounds);
+				//Select tiles within the drag area
 				setSelection(mrBounds);
+				//Make sure the border is erased
 				mrBounds.x-=1;mrBounds.y-=1;mrBounds.width+=2;mrBounds.height+=2;
 				mrBounds.add(dragBounds);
+				//Prepare to repaint the affected area
 				ui.clear(mrBounds);
+				//Redraw the foreground (drag) buffer
 				ui.drawTile(dragBounds,null,PuzzleCanvas.DRAW_DRAGBUFFER,PuzzleCanvas.DRAW_FOREGROUND);
 				ui.repaint(mrBounds);
 			}
@@ -966,7 +982,7 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 				boardManager.addShape(tiles[j]);
 			}
 		}
-		//Keep drag bounds in case of extended selection???
+		//Keep drag bounds in case of extended selection
 		copyRect(dragBounds,ssDragBounds);
 		copyRect(dragAllowance,ssDragAllowance);
 	}
@@ -1254,14 +1270,17 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 
 	public boolean save(PrintStream out)
 	{
+		//Selected tiles are being saved with incorrect coordinates - for now, just clear the selection
+		//@todo see if this can be addressed more elegantly (??? save - clear - restore ???)
+		clearSelection();
 		//Does this make sense??
 		out.println("bounds:"+boardBounds.width+":"+boardBounds.height);
 //uncomment this		boardManager.save(out);
 		connectedTiles.save(out);
-		out.println("x:y:rotation:layer:zIndex");
+		out.println("i:x:y:rotation:layer:zIndex");
 		for(int i=0; i<tiles.length; i++)
 		{
-			out.println(tiles[i].getX()+":"+tiles[i].getY()+":"+tileManager.getRotationCount(i)+":"+layerIndices[i]+":"+zIndices[i]);
+			out.println(i+":"+tiles[i].getX()+":"+tiles[i].getY()+":"+tileManager.getRotationCount(i)+":"+layerIndices[i]+":"+zIndices[i]);
 		}
 		return false;
 	}

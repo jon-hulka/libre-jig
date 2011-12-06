@@ -96,7 +96,7 @@ public class PuzzleLoader
 		if(handler==null)
 		{
 //			gui.setMenuEnabled("load",false);
-//			gui.setMenuEnabled("save",false);
+			gui.setMenuEnabled("save",false);
 			gui.setMenuEnabled("preview",false);
 			gui.setMenuEnabled("color",false);
 			gui.setMenuEnabled("layer1",false);
@@ -107,6 +107,7 @@ public class PuzzleLoader
 		{
 			if(handler instanceof JigsawHandler)
 			{
+				gui.setMenuEnabled("save",true);
 				gui.setMenuEnabled("layer1",true);
 				gui.setMenuEnabled("layer2",true);
 				gui.setMenuEnabled("layer3",true);

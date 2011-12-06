@@ -52,7 +52,7 @@ import javax.swing.UIManager;
 	import javax.swing.UIManager.*;
 
 import hulka.event.*;
-import hulka.graphics.*;
+//import hulka.graphics.*;
 import hulka.gui.*;
 import hulka.util.JVMVersion;
 
@@ -120,8 +120,8 @@ class GUI
 			
 			frame.pack();
 			frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-			guiLoader.getMenuItem("load").setEnabled(false);
-			guiLoader.getMenuItem("save").setEnabled(false);
+//			guiLoader.getMenuItem("load").setEnabled(false);
+//			guiLoader.getMenuItem("save").setEnabled(false);
 			guiLoader.getMenuItem("preview").setEnabled(false);
 			guiLoader.getMenuItem("color").setEnabled(false);
 			guiLoader.getMenuItem("layer1").setEnabled(false);
