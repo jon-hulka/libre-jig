@@ -17,6 +17,10 @@
 
 /**
  * Changelog:
+ * 
+ * 2011 12 19 - Jon
+ *  - Finished implementing save and load functions
+ * 
  * 2011 06 06 - Jon
  *  - bug fix: if two edges (three corners) were completed together, drag allowance wasn't permitting the edge of the resulting connected set to be on the board.
  *  - bug fix: Multi-select dragging allowed pieces to 'fall off' the edge and be lost. This was a result of negative width and heights in drag allowance calculations.
@@ -98,7 +102,13 @@ import java.awt.event.MouseEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.KeyEvent;
 import hulka.tilemanager.TileManager;
-import java.io.PrintStream;
+import hulka.tilemanager.SquareJigsawManager;
+import hulka.tilemanager.HexJigsawManager;
+import hulka.util.ArrayWriter;
+import hulka.util.ArrayReader;
+import java.io.PrintWriter;
+import java.io.BufferedReader;
+import java.io.IOException;
 
 import java.util.Arrays;
 
@@ -108,7 +118,9 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 	private TileManager tileManager;
 	private Random random=new Random();
 
+	//For drawing - extend the size of tiles to prevent clipping
 	private int errMargin=2;
+	//Distance in pixels for two tiles to 'snap' together
 	private int snapThreshold=5;
 	private int mouseCount=0;
 
@@ -158,23 +170,46 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 	public JigsawHandler(TileManager tileManager)
 	{
 		this.tileManager=tileManager;
+		tiles = new MouseSensetiveTile [tileManager.getTileCount()];
+		tileMargin = tileManager.getTileMargin();
+
+		tileWidth = tileManager.getTileWidth();
+		tileHeight = tileManager.getTileHeight();
+		tileSpacingX = tileManager.getTileSpacingX();
+		tileSpacingY = tileManager.getTileSpacingY();
+		tileSize = (tileHeight>tileWidth ? tileHeight : tileWidth) + tileMargin*2;
+
+		boardManager = new MouseSensetiveShapeManager();
 	}
 	
 	public void connect(PuzzleCanvas canvas)
+	{
+		connect(canvas,true);
+	}
+	
+	/**
+	 * Handles both setup cases - new game (tiles need to be initialized), or load game (tiles already initialized)
+	 */
+	private void connect(PuzzleCanvas canvas, boolean doSetup)
 	{
 		ui=canvas;
 		boardBounds=ui.getBounds(boardBounds);
 		boardBounds.x=0;
 		boardBounds.y=0;
-		setupTiles();
+		if(doSetup)
+		{
+			setupTiles();
+		}
 		ui.setBuffers(tileManager.getTileCount(),tileSize,errMargin);
 		AffineTransform trans=AffineTransform.getTranslateInstance(tileMargin,tileMargin);
 		for(int i=0; i<tiles.length; i++)
 		{
 			ui.setTileMask(i,trans.createTransformedShape(tileManager.getTileMask(i)));
 			initTileImage(i);
+			if(layerIndices[i]==currentLayer)boardManager.addShape(tiles[i]);
 		}
 		redraw();
+		boardManager.addEventListener(this);
 		ui.addMouseListener(boardManager);
 		ui.addMouseListener(this);
 		ui.addMouseMotionListener(this);
@@ -264,22 +299,14 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 
 	private void setupTiles()
 	{
-		tiles = new MouseSensetiveTile [tileManager.getTileCount()];
+		//Connected sets and index arrays are handled differently for loaded games vs new games - this is for new games
 		connectedTiles=new ConnectedSet(tiles.length);
 		selectedTiles=new ConnectedSet(tiles.length);
 		zIndices = new int[tiles.length];
-		tileMargin = tileManager.getTileMargin();
-
-		tileWidth = tileManager.getTileWidth();
-		tileHeight = tileManager.getTileHeight();
-		tileSpacingX = tileManager.getTileSpacingX();
-		tileSpacingY = tileManager.getTileSpacingY();
-		int rotationSteps  = tileManager.getRotationSteps();
-		tileSize = (tileHeight>tileWidth ? tileHeight : tileWidth) + tileMargin*2;
-		
-		//initialize layers
 		layerIndices=new int[tiles.length];
-		
+
+		int rotationSteps  = tileManager.getRotationSteps();
+		//initialize layers
 		for(int i=0; i < zIndices.length; i++)
 		{
 			//All tiles to layer 0
@@ -296,8 +323,6 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 			zIndices[index] = t;
 		}
 		
-		boardManager = new MouseSensetiveShapeManager();
-		
 		int w=boardBounds.width-tileSize-1;
 		int h=boardBounds.height-tileSize-1;
 		for(int i=0;  i < zIndices.length; i++)
@@ -306,9 +331,10 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 			int y = random.nextInt(h);
 			tileManager.rotate(zIndices[i],TileManager.SPIN_CW*random.nextInt(rotationSteps));
 			tiles[zIndices[i]] = new MouseSensetiveTile(tileManager, zIndices[i], x, y,i,errMargin);
-			boardManager.addShape(tiles[zIndices[i]]);
+//2011 12 18 - moved into connect()
+//			boardManager.addShape(tiles[zIndices[i]]);
 		}
-		boardManager.addEventListener(this);
+//		boardManager.addEventListener(this);
 	}
 	
 	private Point itiPos=new Point();
@@ -1152,7 +1178,7 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 
 			int x1 = tiles[tileIndex].getX();
 			int y1 = tiles[tileIndex].getY();
-			//Realign tiles to fix rotation errors
+			//Realign tiles to fix rotation error
 			tileSet.setGroup(tileIndex);
 			boolean boundsSet=false;
 			for(int i=tileSet.getNext(); i>=0; i=tileSet.getNext())
@@ -1268,20 +1294,213 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 	
 	public void keyTyped(KeyEvent e){}
 
-	public boolean save(PrintStream out)
+	public boolean save(PrintWriter out, PrintWriter err)
 	{
-		//Selected tiles are being saved with incorrect coordinates - for now, just clear the selection
-		//@todo see if this can be addressed more elegantly (??? save - clear - restore ???)
-		clearSelection();
-		//Does this make sense??
-		out.println("bounds:"+boardBounds.width+":"+boardBounds.height);
-//uncomment this		boardManager.save(out);
-		connectedTiles.save(out);
-		out.println("i:x:y:rotation:layer:zIndex");
-		for(int i=0; i<tiles.length; i++)
+		boolean result=true;
+		//This is for PuzzleHandler.load to identify puzzle type
+		out.println("JigsawHandler");
+
+		//Save the TileManager
+		if(tileManager instanceof SquareJigsawManager)
 		{
-			out.println(i+":"+tiles[i].getX()+":"+tiles[i].getY()+":"+tileManager.getRotationCount(i)+":"+layerIndices[i]+":"+zIndices[i]);
+			out.println("SquareJigsawManager");
+			result = ((SquareJigsawManager)tileManager).save(out,err);
 		}
-		return false;
+		else if(tileManager instanceof HexJigsawManager)
+		{
+			out.println("HexJigsawManager");
+			result = ((HexJigsawManager)tileManager).save(out,err);
+		}
+		else result = false;
+
+		if(result)
+		{
+			int [][] data = new int[5][];
+			for(int i=0; i<3; i++)
+			{
+				data[i]=new int[tiles.length];
+			}
+			String [] names = {"x","y","rotation","layer","zIndex"};
+			for(int i=0; i<tiles.length; i++)
+			{
+				data[0][i]=tiles[i].getX();
+				data[1][i]=tiles[i].getY();
+				data[2][i]=tileManager.getRotationCount(i);
+			}
+			data[3]=layerIndices;
+			data[4]=zIndices;
+			result = new ArrayWriter(5,tiles.length,"JigsawHandler").save(data,names,out,err);
+		}
+
+		//Save connected sets
+		if(result) result = connectedTiles.save(out,err);
+
+		return result;
+
+/*
+		boolean result=true;
+		//Identify to PuzzleHandler's load function
+		out.println("JigsawHandler");
+
+		//Save the TileManager
+		if(tileManager instanceof SquareJigsawManager)
+		{
+			result = ((SquareJigsawManager)tileManager).save(out,err);
+		}
+		else if(tileManager instanceof HexJigsawManager)
+		{
+			result = ((HexJigsawManager)tileManager).save(out,err);
+		}
+		else result = false;
+		
+		//Save tile properties
+		if(result)
+		{
+			//Selected tiles are being saved with incorrect coordinates - for now, just clear the selection
+			//@todo see if this can be addressed more elegantly (??? save - clear - restore ???)
+			clearSelection();
+			out.println("i:x:y:rotation:layer:zIndex");
+			for(int i=0; i<tiles.length; i++)
+			{
+				out.println(i+":"+tiles[i].getX()+":"+tiles[i].getY()+":"+tileManager.getRotationCount(i)+":"+layerIndices[i]+":"+zIndices[i]);
+			}
+		}
+		
+		//Save connected sets
+		if(result) result = connectedTiles.save(out,err);
+
+		return result;
+*/
 	}
+
+	public static JigsawHandler load(PuzzleCanvas boardCanvas, BufferedReader in, PrintWriter err)
+	{
+		JigsawHandler result=null;
+		ArrayReader reader=null;
+
+		TileManager tileManager=null;
+		String managerType=null;
+		try
+		{
+			managerType=in.readLine();
+			if(managerType==null)
+			{
+				err.println("JigsawHandler.load(): Unexpected end of file.");
+			}
+		}
+		catch(IOException ex)
+		{
+			managerType=null;
+			err.println("JigsawHandler.load(): " + ex.getMessage());
+		}
+		
+		if("HexJigsawManager".equals(managerType))
+		{
+			tileManager=HexJigsawManager.load(in,err);
+		}
+		else if("SquareJigsawManager".equals(managerType))
+		{
+			tileManager=SquareJigsawManager.load(in,err);
+		}
+		else
+		{
+			err.println("Tile shape unknown or missing.");
+		}
+		
+		if(tileManager!=null)
+		{
+			reader=new ArrayReader("JigsawHandler");
+			if(reader.load(in,err))
+			{
+				result=new JigsawHandler(tileManager);
+			}
+		}
+		
+		if(result!=null)
+		{
+			result.selectedTiles = new ConnectedSet(result.tiles.length);
+			result.zIndices=null;
+			result.layerIndices=null;
+			int [] x = null;
+			int [] y = null;
+			int [] rotation = null;
+			
+			if(result!=null)
+			{
+				result.zIndices = reader.getColumn("zIndex",err);
+				if(result.zIndices==null) result=null;
+			}
+
+			if(result!=null)
+			{
+				result.layerIndices = reader.getColumn("layer",err);
+				if(result.layerIndices==null) result=null;
+			}
+			
+			if(result != null)
+			{
+				x = reader.getColumn("x",err);
+				if(x==null) result=null;
+			}
+
+			if(result != null)
+			{
+				y = reader.getColumn("y",err);
+				if(y==null) result=null;
+			}
+
+			if(result != null)
+			{
+				rotation = reader.getColumn("rotation",err);
+				if(rotation==null) result=null;
+			}
+
+			if(result!=null && x.length != result.tiles.length)
+			{
+				result=null;
+				err.println("JigsawHandler.load(): expected " + result.tiles.length + " rows, found " + x.length + ".");
+			}
+			
+			if(result != null)
+			{
+//todo scale x and y here to fit scaled tile sizes - this has to happen when scaling is implemented for JigsawManagers
+				for(int i=0; i<result.tiles.length; i++)
+				{
+					//Set up tiles
+					result.tiles[i]=new MouseSensetiveTile(tileManager, i,
+						x[i], //x
+						y[i], //y
+						-1, //z-index is reverse indexed, it will be handled later
+						result.errMargin);
+					tileManager.rotate(i,TileManager.SPIN_CW*rotation[i]); //rotation
+				}
+				//Now do z-index
+				for(int i=0; result!=null && i<result.zIndices.length; i++)
+				{
+					result.tiles[result.zIndices[i]].setZOrder(i);
+				}
+			}
+		}
+
+		if(result!=null)
+		{
+			//Load connected sets
+			ConnectedSet connectedTiles=ConnectedSet.load(in,err);
+			if(connectedTiles!=null)
+			{
+				result.connectedTiles=connectedTiles;
+			}
+			else
+			{
+				result=null;
+			}
+		}
+
+		if(result!=null)
+		{
+			result.connect(boardCanvas,false);
+		}
+		return result;
+	}
+
 }

@@ -25,7 +25,15 @@ public abstract class AbstractTileManagerImpl implements TileManager
 	public abstract void initTileSetDescriptor(TileSetDescriptor descriptor);
 	public abstract Point2D.Double getScaledTileCenterOffset(int flatIndex, Point2D.Double offset);
 	public abstract Point getExpandedIndex(int flatIndex, Point expandedIndex);
-	
+
+	/**
+	 * To satisfy the (Square|Hex)JigsawManagers' mimimal constructors.
+	 */
+	protected AbstractTileManagerImpl(TileSetDescriptor descriptor)
+	{
+		this.descriptor=descriptor;
+	}
+
 	/**
 	 * @param tilesAcross
 	 * @param tilesDown

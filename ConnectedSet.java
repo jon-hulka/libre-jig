@@ -17,7 +17,17 @@
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.io.PrintStream;
+/**
+ * Changelog:
+ * 
+ * 2011 12 19 - Jon
+ *  - Finished implementing save and load functions
+ */
+
+import java.io.PrintWriter;
+import java.io.BufferedReader;
+import hulka.util.ArrayWriter;
+import hulka.util.ArrayReader;
 
 /**
  * Represents a set of elements that can be connected in groups.
@@ -29,6 +39,7 @@ public class ConnectedSet
 	private int group;
 	private int nextValue;
 
+	private ConnectedSet(){}
 	public ConnectedSet(int size)
 	{
 		connectedIndex=new int[size];
@@ -199,13 +210,13 @@ public class ConnectedSet
 			//skip past empty positions
 			for(depth=0;depth<sortedList.length&&sortedList[depth]<0;depth++);
 			int cc=connectedCount[sortedList[depth]];
+			//skip past smaller connected groups
 			while(cc<size&&depth+size<connectedIndex.length)
 			{
 				depth+=cc;
 				cc=connectedCount[sortedList[depth]];
 			}
 		}
-
 		//look for the element
 		while(position<0&&connectedCount[sortedList[depth]]==size)
 		{
@@ -282,14 +293,35 @@ public class ConnectedSet
 		return depth-size;
 	}
 	
-	public boolean save(PrintStream out)
+	public boolean save(PrintWriter out, PrintWriter err)
 	{
-		
-		out.println("connected:count");
-		for(int i=0;i<connectedIndex.length;i++)
+		int [][] values=new int[2][];
+		values[0]=connectedIndex;
+		values[1]=connectedCount;
+		String [] names={"connectedIndex","connectedCount"};
+		return new ArrayWriter(2,connectedIndex.length,"ConnectedSet").save(values,names,out,err);
+	}
+	
+	public static ConnectedSet load(BufferedReader in, PrintWriter err)
+	{
+		ConnectedSet result=null;
+		ArrayReader reader=new ArrayReader("ConnectedSet");
+		if(reader.load(in,err))
 		{
-			out.println(i+":"+connectedIndex[i]+":"+connectedCount[i]);
+			int [] cI=null;
+			int [] cC=null;
+			
+			cI=reader.getColumn("connectedIndex",err);
+			if(cI!=null) cC=reader.getColumn("connectedCount",err);
+			if(cI!=null && cC!=null)
+			{
+				result=new ConnectedSet();
+				result.connectedCount=cC;
+				result.connectedIndex=cI;
+				result.group=-1;
+				result.nextValue=-1;
+			}
 		}
-		return true;
+		return result;
 	}
 }
