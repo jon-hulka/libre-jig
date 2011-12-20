@@ -1,11 +1,9 @@
-0,0-1,0 top
-1,0-1,1 right
-1,1-0,1 bottom
-0,1-0,0 left
+CLEAN UP MouseSensetiveTile - need to rethink MouseSensetiveShapeManager - simplify, simplify, simplify
+ - addShape(MouseSensetiveShape) needs to be changed to addShape(Shape shape,int index,int zOrder); MouseSensetiveShape doesn't add enough functionality to justify having a class of its own
+   This will require reworking all the event handlers
 
-
-Integrate ReverseMaskTransform into MaskTransform. This will make it more generic.
-
+add a compatibility version to the save files (puzzle loader can check to make sure newer version files are still compatible)
+new version checker - only at user's request
 
 vxxxx.xx.xx (software version)
 i<path>
@@ -23,11 +21,9 @@ on load
 time and that isn't always possible. Therefore it would be nice if the
 current puzzle will be saved for continues play at a later time.
 
-group option for multiselect - select pieces - press 'g' - pieces arranged as a grid
-
-Not an issue - Credits and help: browse error when clicking on links - is this a slackware config issue??? YES
-
 >>>>- Next release -<<<<
+
+group option for multiselect - select pieces - press 'g' - pieces arranged as a grid
 
 MouseSensetiveShapeManager efficiency
 
@@ -45,7 +41,7 @@ Wondering if you game works of a feed (rss,xml) or repository of images? Similar
 
 Implement a webstart version:
  - collections/images download from the site and can be cached locally in .virtualtoybox/puzzlegames/collections
- - can webstart be initialized with a parameter, could just have collection links (js nature photos, riya thore, etc...)
+ - can webstart be initialized with a parameter, could just have collection links (js nature photos, other collections...)
 
 
 

@@ -1,5 +1,5 @@
 /** 
- *   Copyright (C) 2010  Jonathan Hulka
+ *   Copyright (C) 2010, 2011 Jonathan Hulka (jon.hulka@gmail.com)
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,39 +16,37 @@
  */
 
 /**
- * changelog
+ * Changelog:
+ * 
+ * 2011 12 19 - Jon
+ *  - Finished implementing save and load functions
+ * 
+ * 2011 12 07 - Jon
+ * - Moved generic functionality into JigsawCutter - it now handles shape generation for SquareJigsawManager and HexJigsawManager
  * 2011 12 02 - Jon
- *  - Removed redundant and confusing neighborOffsetIndex setup code from the constructor - this is handled by SquareTileManager
+ * - Removed redundant and confusing neighborOffsetIndex setup code from the constructor - this is handled by SquareTileManager
  * 2010 07 09 - Jon
  * - enhanced initTilesetDescriptor and randomize functions:
  *  Corner variance is now used for optimized tile sizing and edge adjustment.
  * 2010 07 26 - Jon
  * - Made tile size optimization code more consistent with HexJigsawManager
-*/
+ */
 package hulka.tilemanager;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Path2D;
-import java.awt.geom.Area;
+import java.util.Random;
 import java.awt.geom.Point2D;
 import java.awt.Point;
 import java.awt.Shape;
-import java.util.Random;
 
-/**
- * Adds jigsaw shapes to SquareTileManager.
- * To do - make drawing functions more inline with HexJigsawManager:
- *  - eventually these should be abstracted to the point that they can be
- *    pulled out into a class of their own.
- */
+import java.io.PrintWriter;
+import java.io.BufferedReader;
+
 public class SquareJigsawManager extends SquareTileManager
 {
-	//This will be used in some calculations
-	protected static double sqrt3 = Math.sqrt(3);
-
+	JigsawCutter cutter;
 	//Only count direct neighbors
 	private static int NEIGHBOR_COUNT = SIDE_COUNT;
 	//Tweak this to get the bubbles big enough
-	private static double bubbleMinFactor = 0.20;
+	private static double bubbleMinFactor = 0.30;
 	//Tweak this to get the bubbles small enough
 	private static double bubbleMaxFactor = 0.40;
 	//Tweak this to adjust the curve sharpness
@@ -77,21 +75,33 @@ public class SquareJigsawManager extends SquareTileManager
 	private int cornerIndexOffset[] = new int[4];
 	private Point edgeTileOffset[] = new Point[4];
 
-	AffineTransform[] reverseMaskTransform = new AffineTransform[NEIGHBOR_COUNT/2];
-	AffineTransform[] maskTransform = new AffineTransform[NEIGHBOR_COUNT/2];
-
-
-	//Temporary storage for drawing function
-	Point2D.Double [] corners = new Point2D.Double[NEIGHBOR_COUNT*4];
-	Point2D.Double [] controls = new Point2D.Double[NEIGHBOR_COUNT*6];
-	Point2D.Double a=new Point2D.Double(), b=new Point2D.Double();
-
 	//Temporary storage to avoid excessive heap usage
-	private Point tempIndex=new Point(), tempNeighbor=new Point();
+	private Point tempIndex=new Point();
+
+	/**
+	 * This constructor is used for minimal setup when data is being loaded rather than generated.
+	 */
+	private SquareJigsawManager(TileSetDescriptor descriptor)
+	{
+		super(descriptor);
+		initCutter();
+
+		//Since AbstractTileManagerImpl's constructor will not be called:
+		rotationStep=2.0*Math.PI/((double)descriptor.rotationSteps);
+		originalIndex=new int[descriptor.tileCount];
+		rotation = new int[descriptor.tileCount];
+		for(int i=0; i<descriptor.tileCount; i++)
+		{
+			originalIndex[i]=i;
+			rotation[i]=0;
+		}
+	}
 
 	public SquareJigsawManager(int width, int height, int tilesAcross, int tilesDown)
 	{
 		super(width,height,tilesAcross,tilesDown);
+		initCutter();
+
 		for(int i = 0; i < 2; i++)
 		{
 			cornerOffsetX[i] = new int[extTC];
@@ -112,9 +122,27 @@ public class SquareJigsawManager extends SquareTileManager
 		bottomVariance = cornerVariance>bottomOffset?bottomOffset:cornerVariance;
 		leftVariance = cornerVariance>descriptor.leftOffset?descriptor.leftOffset:cornerVariance;
 		rightVariance=cornerVariance>rightOffset?rightOffset:cornerVariance;
-
-		randomize();
 		
+		//Set up the drawing data
+		randomize();
+		//And pass it to the cutter
+		cutter.setDrawingData(
+			cornerOffsetX,
+			cornerOffsetY,
+			bubbleSize,
+			bubbleDirection,
+			controlPointOffset);
+	}
+	
+	//Shared by the constructors
+	private void initCutter()
+	{
+		//Special indexing - pad all edges by one tile - this is necessary so that edge tiles have neighbors
+		extTA=descriptor.tilesAcross+2;
+		extTD=descriptor.tilesDown+2;
+		extTC=extTA*extTD;
+
+		//Set up corner and edge indexing
 		Point thisTile = new Point(0,0);
 		//Square tiles 'own' corner 0 and use neighbors' corners 1 through 3
 		//These values determine which neighbor a given corner is to be borrowed from
@@ -128,36 +156,32 @@ public class SquareJigsawManager extends SquareTileManager
 			//These values determine which neighbor a given edge is to be borrowed from
 			edgeTileOffset[i] = thisTile;
 			edgeTileOffset[i+2]=neighborOffsetIndex[i+2];
-			//This is insignificant for square tiles, since corner 0 is always used. It is here for compatibility with the hex tile algorithm
+			//This is insignificant for square tiles, since corner 0 is always used. It is here for compatibility with the more generic algorithm
 			cornerIndexOffset[i] = 0;
 			cornerIndexOffset[i+2] = 0;
 		}
 
-		//Set up corners and controls for the edge path - there will be 4 corners (plus 1 shared) and 6 controls on each side
-		//The order is something like this:
-		//corner(shared),controls[0],controls[1],corners[0] - cubic spline from the corner of the tile to the base of the stem
-		//corners[0],controls[2],corners[1] - quadratic spline from the base of the stem to the center of the bubble
-		//corners[1],controls[3],corners[2] - quadratic spline from the center of the bubble to the base of the stem (other side)
-		//corners[2],controls[4],controls[5],corners[3] - cubic spline from the base of the stem to the corner of the tile (other side)
-		//
-		//controls[1], controls[2], controls[3], and controls[4] form a near triangle,
-		//1 and 4 being nearly centered on the tile edge between the shared corner and corners[3]
-		//and the intervening corners between the controls - this creates the bubble shape
-		for(int j=0; j<NEIGHBOR_COUNT; j++)
+		//Set up the JigsawCutter
+		cutter=new JigsawCutter(
+			descriptor,
+			0.0,
+			maskPoints,
+			cornerTileOffset,
+			cornerIndexOffset,
+			edgeTileOffset)
 		{
-			for(int i=0; i<4; i++) corners[i*NEIGHBOR_COUNT+j]=new Point2D.Double();
-			for(int i=0; i<6; i++) controls[i*NEIGHBOR_COUNT+j]=new Point2D.Double();
-		}
-		//The edges are rotated into position to simplify the corner/control point calculations, then rotated back for drawing the path
-		//These transforms handle the rotations
-		for(int i=0; i<NEIGHBOR_COUNT/2; i++)
-		{
-			double theta = i*2.0*Math.PI/NEIGHBOR_COUNT;
-			reverseMaskTransform[i] = AffineTransform.getRotateInstance(-theta,descriptor.tileWidth/2.0, descriptor.tileHeight/2.0);
-			maskTransform[i] = AffineTransform.getRotateInstance(theta,descriptor.tileWidth/2.0, descriptor.tileHeight/2.0);
-		}
+			public int getExtFlatIndex(Point tileIndex)
+			{
+				int result=-1;
+				//pad the edges
+				int x=tileIndex.x+1;
+				int y=tileIndex.y+1;
+				if(x >=0 && x < extTA && y >= 0 && y < extTD)
+					result=y*extTA + x;
+				return result;
+			}
+		};
 	}
-	
 	/**
 	 * Overridden for tileMargin adjustment and tile size optimizing
 	 */
@@ -182,168 +206,16 @@ public class SquareJigsawManager extends SquareTileManager
 		bubbleMin = (int)((descriptor.tileWidth - cornerVariance*2)*bubbleMinFactor);
 		bubbleMax = (int)((descriptor.tileWidth - cornerVariance*2)*bubbleMaxFactor);
 		d.tileMargin = cornerVariance + bubbleMax;
-
-		//Special indexing - pad all edges by one tile - this is necessary so that edge tiles have neighbors
-		extTA=descriptor.tilesAcross+2;
-		extTD=descriptor.tilesDown+2;
-		extTC=extTA*extTD;
 	}
-	
-	/**
-	 * Special indexing includes tiles past the edge of the board
-	 */
-	private int getExtFlatIndex(Point tileIndex)
-	{
-		int result=-1;
-		//pad the edges
-		int x=tileIndex.x+1;
-		int y=tileIndex.y+1;
-		if(x >=0 && x < extTA && y >= 0 && y < extTD)
-			result=y*extTA + x;
-		return result;
-	}
-	
 
 	public Shape getTileMask(int flatIndex)
 	{
-		//This algorithm works for even-sided tiles (square and hex)
-		//Each tile 'owns' half its edges while the other half are 'owned' by neighboring tiles.
-		//Triangular tiles will require a different approach
-		Point tileIndex = getExpandedIndex(flatIndex,tempIndex);
-		int extIndex=getExtFlatIndex(tileIndex);
-		//Position the corners
-		for(int i = 0; i < NEIGHBOR_COUNT; i++)
-		{
-			tempNeighbor.x = tileIndex.x + cornerTileOffset[i].x;
-			tempNeighbor.y = tileIndex.y + cornerTileOffset[i].y;
-			
-			int index=getExtFlatIndex(tempNeighbor);
-			int indexOffset=cornerIndexOffset[i];
-			int xOffset = cornerOffsetX[indexOffset][index];
-			int yOffset = cornerOffsetY[indexOffset][index];
-
-			//Apply offsets
-			corners[i*4].x=maskPoints[i].x + xOffset;
-			corners[i*4].y=maskPoints[i].y + yOffset;
-		}
-
-		for(int i = 0; i < NEIGHBOR_COUNT; i++)
-		{
-			int index=-1;
-			if(i>=NEIGHBOR_COUNT/2)
-			{
-				//This is a 'bottom' edge - use the 'top' edge of a neighboring tile
-				tempNeighbor.x = tileIndex.x + edgeTileOffset[i].x;
-				tempNeighbor.y = tileIndex.y + edgeTileOffset[i].y;
-				index=getExtFlatIndex(tempNeighbor);
-			}
-			else
-			{
-				//This is a 'top' edge - it belongs to the current tile
-				index=extIndex;
-			}
-			//Rotate the corners into position for computing the bubble
-			//Index of the 'top' edge will determine the rotation angle required, so the corresponding 'top' index must be used for 'bottom' edges
-			int topIndex=i%(NEIGHBOR_COUNT/2);
-			a = (Point2D.Double)reverseMaskTransform[topIndex].transform(corners[i*4],a);
-			b = (Point2D.Double)reverseMaskTransform[topIndex].transform(corners[((i+1)%NEIGHBOR_COUNT)*4],b);
-			double cp,bSize,bDirection;
-			if(bubbleSize[topIndex][index]==0&&controlPointOffset[topIndex][index]==0)
-			{
-				//Flat edge - put all the control points at the corners
-				for(int j=0;j<6;j++)
-				{
-					controls[i*6+j].x=b.x;
-					controls[i*6+j].y=b.y;
-				}
-				for(int j=1;j<4;j++)
-				{
-					corners[i*4+j].x=b.x;
-					corners[i*4+j].y=b.y;
-				}
-			}
-			else
-			{
-				//Bubble edge - set up and call buildEdge
-				cp = (a.x+b.x)/2 + controlPointOffset[topIndex][index];
-				bSize = bubbleSize[topIndex][index];
-				bDirection = bubbleDirection[topIndex][index];
-				buildEdge(corners, controls, i, a.x, a.y, b.x, b.y, cp, bSize, bDirection);
-			}
-			
-			//Rotate all the corners and controls back into position for drawing
-			for(int j = 0; j < 6; j++)
-			{
-				maskTransform[topIndex].transform(controls[i*6+j],controls[i*6+j]);
-			}
-			for(int j = 1; j < 4; j++)
-			{
-				maskTransform[topIndex].transform(corners[i*4+j],corners[i*4+j]);
-			}
-		}
-
-		//Draw the path
-		Path2D.Double path = new Path2D.Double();
-		path.moveTo((float)corners[0].x,(float)corners[0].y);
-
-		for(int i=0; i < NEIGHBOR_COUNT; i++)
-		{
-			path.curveTo((float)controls[i*6].x,(float)controls[i*6].y,(float)controls[i*6+1].x,(float)controls[i*6+1].y,(float)corners[i*4 + 1].x,(float)corners[i*4 + 1].y);
-			path.quadTo((float)controls[i*6+2].x,(float)controls[i*6+2].y,(float)corners[i*4 + 2].x,(float)corners[i*4 + 2].y);
-			path.quadTo((float)controls[i*6+3].x,(float)controls[i*6+3].y,(float)corners[i*4 + 3].x,(float)corners[i*4 + 3].y);
-			path.curveTo((float)controls[i*6+4].x,(float)controls[i*6+4].y,(float)controls[i*6+5].x,(float)controls[i*6+5].y,(float)corners[((i+1)%NEIGHBOR_COUNT)*4].x,(float)corners[((i+1)%NEIGHBOR_COUNT)*4].y);
-		}
-		
-		return new Area(path);
-		
-	}
-	
-	private void buildEdge(Point2D.Double [] corners, Point2D.Double [] controls, int index, double x1, double y1, double x2, double y2, double cp, double bubbleSize, double bubbleDirection)
-	{
-		double direction = x2 - x1 > 0 ? 1 : -1;
-		double midY = (y1 + y2)/2.0;
-		//Base control point for bubble
-		double midX = cp;
-		double cpStemY1 = (y1*0.65 + y2*0.35);//y1 + yDiff;
-		double cpStemY2 = (y2*0.65 + y1*0.35);//yDiff;
-		//Outer bubble point
-		double bubbleY = bubbleDirection*bubbleSize + midY;
-		//Bubble control points will almost form a triangle - this makes the sides nearly even
-		double temp = direction*Math.abs(bubbleY - midY)/sqrt3;
-		double cpBubbleX1 = midX - temp;
-		double cpBubbleX2 = midX + temp;
-		//Stem points
-		double stemX1 = (cpBubbleX1*0.25 + midX*0.75);
-		double stemX2 = (cpBubbleX2*0.25 + midX*0.75);
-		//Move the stem points away from the base line (up or down)
-		double stemY1 = (bubbleY*0.25 + cpStemY1*0.75);
-		double stemY2 = (bubbleY*0.25 + cpStemY2*0.75);
-
-		controls[index*6].x=cp*0.6 + x1*0.4;
-		controls[index*6].y=y1;
-		controls[index*6+1].x=midX;
-		controls[index*6+1].y=cpStemY1;
-		corners[index*4 + 1].x=stemX1;
-		corners[index*4 + 1].y=stemY1;
-
-		controls[index*6+2].x=cpBubbleX1;
-		controls[index*6+2].y=bubbleY;
-		corners[index*4 + 2].x=midX;
-		corners[index*4 + 2].y=bubbleY;
-		
-		controls[index*6+3].x=cpBubbleX2;
-		controls[index*6+3].y=bubbleY;
-		corners[index*4 + 3].x=stemX2;
-		corners[index*4 + 3].y=stemY2;
-
-		controls[index*6+4].x=midX;
-		controls[index*6+4].y=cpStemY2;
-		controls[index*6+5].x=cp*0.6 + x2*0.4;
-		controls[index*6+5].y=y2;
+		return cutter.getTileMask(getExpandedIndex(flatIndex,tempIndex));
 	}
 
 	private void randomize()
 	{
+		//Unable to move randomize into JigsawCutter - edge case handling is too different between tile shapes.
 		Random random = new Random();
 		Point extIndex=new Point();
 		for(extIndex.y=-1; extIndex.y<=descriptor.tilesDown; extIndex.y++)
@@ -351,7 +223,7 @@ public class SquareJigsawManager extends SquareTileManager
 			for(extIndex.x=-1; extIndex.x<=descriptor.tilesAcross; extIndex.x++)
 			{
 				//Convert to flat indexing
-				int index=getExtFlatIndex(extIndex);
+				int index=cutter.getExtFlatIndex(extIndex);
 				//Introduce some random variance to the corners
 				cornerOffsetX[0][index] = random.nextInt(cornerVariance*2 - 1) - cornerVariance + 1;
 				cornerOffsetY[0][index] = random.nextInt(cornerVariance*2 - 1) - cornerVariance + 1;
@@ -387,13 +259,13 @@ public class SquareJigsawManager extends SquareTileManager
 			//Left edge
 			extIndex.x=0;
 			//Convert to flat indexing
-			int index=getExtFlatIndex(extIndex);
-			cornerOffsetX[0][index]=leftVariance;
+			int index=cutter.getExtFlatIndex(extIndex);
+			cornerOffsetX[0][index]=-leftVariance;
 
 			//Right edge
 			extIndex.x=descriptor.tilesAcross;
 			//Convert to flat indexing
-			index=getExtFlatIndex(extIndex);
+			index=cutter.getExtFlatIndex(extIndex);
 			cornerOffsetX[0][index]=rightVariance;
 		}
 
@@ -403,28 +275,39 @@ public class SquareJigsawManager extends SquareTileManager
 			//Left edge
 			extIndex.y=0;
 			//Convert to flat indexing
-			int index=getExtFlatIndex(extIndex);
-			cornerOffsetY[0][index]=leftVariance;
+			int index=cutter.getExtFlatIndex(extIndex);
+			cornerOffsetY[0][index]=-topVariance;
 
 			//Right edge
 			extIndex.y=descriptor.tilesDown;
 			//Convert to flat indexing
-			index=getExtFlatIndex(extIndex);
-			cornerOffsetY[0][index]=rightVariance;
+			index=cutter.getExtFlatIndex(extIndex);
+			cornerOffsetY[0][index]=bottomVariance;
 		}
 	}
 	
-//	public boolean save(PrintStream out)
-//	{
-/*		//Tile drawing information
-		//Corners
-		private int [][] cornerOffsetX=new int[2][];
-		private int [][] cornerOffsetY=new int[2][];
-		//Edges
-		private int [][] bubbleSize=new int[3][];
-		private int [][] bubbleDirection=new int[3][];
-		private int [][] controlPointOffset=new int[3][];
-		//Indices to help with drawing - these are indexed differently, with extra tiles around the edges
-		private int extTA,extTD,extTC;
-*///	}
+	public boolean save(PrintWriter out, PrintWriter err)
+	{
+		boolean result=true;
+		if(result) result=descriptor.save(out,err);
+		if(result) result=cutter.save(out,err);
+		return result;
+	}
+	
+	public static SquareJigsawManager load(BufferedReader in, PrintWriter err)
+	{
+		SquareJigsawManager result=null;
+		TileSetDescriptor descriptor=TileSetDescriptor.load(in,err);
+//Todo scale to fit here - it might make most sense to give descriptor the new size and let it figure out the scaling
+		if(descriptor!=null)
+		{
+			result=new SquareJigsawManager(descriptor);
+			if(!result.cutter.load(in,err))
+			{
+				result=null;
+			}
+		}
+//todo scale the cutter here - probably implement a scale function via descriptor
+		return result;
+	}
 }

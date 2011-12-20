@@ -1,4 +1,33 @@
+/**
+ *   Copyright (C) 2010 Jonathan Hulka (jon.hulka@gmail.com)
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/**
+ * Changelog:
+ * 
+ * 2011 12 19 - Jon
+ *  - Finished implementing save and load functions
+ */
 package hulka.tilemanager;
+
+import java.io.PrintWriter;
+import java.io.BufferedReader;
+import hulka.util.ArrayReader;
+import hulka.util.ArrayWriter;
+
 /**
  * Stores the parameters required to describe a set of tiles.
  */
@@ -100,5 +129,63 @@ public class TileSetDescriptor implements Cloneable
 				+ "\nsideCount " + sideCount
 				+ "\nheightWidthRatio " + heightWidthRatio
 				+ "\ntileMargin " + tileMargin;
+	}
+	
+	private static enum Property{BOARD_WIDTH, BOARD_HEIGHT, TILES_ACROSS, TILES_DOWN, FIT_EDGE_TILES, LEFT_OFFSET, TOP_OFFSET, SCALE_FACTOR, TILE_WIDTH, TILE_HEIGHT, TILE_SPACING_X, TILE_SPACING_Y, TILE_COUNT, ROTATION_STEPS, SIDE_COUNT, HEIGHT_WIDTH_RATIO, TILE_MARGIN};
+	private static String [] propertyNames={"boardWidth", "boardHeight", "tilesAcross", "tilesDown", "fitEdgeTiles", "leftOffset", "topOffset", "scaleFactor", "tileWidth", "tileHeight", "tileSpacingX", "tileSpacingY", "tileCount", "rotationSteps", "sideCount", "heightWidthRatio", "tileMargin"};
+	public boolean save(PrintWriter out, PrintWriter err)
+	{
+		//Since ArrayWriter deals with int values, fitEdgeTiles, scaleFactor, and HeightWidthRatio must be converted appropriately
+		int [][] values = {{boardWidth}, {boardHeight}, {tilesAcross}, {tilesDown}, {fitEdgeTiles?0:1}, {leftOffset}, {topOffset}, {(int)(scaleFactor*0x01000000)}, {tileWidth}, {tileHeight}, {tileSpacingX}, {tileSpacingY}, {tileCount}, {rotationSteps}, {sideCount}, {(int)(heightWidthRatio*0x01000000)}, {tileMargin}};
+		return new ArrayWriter(values.length,1,"TileSetDescriptor").save(values,propertyNames,out,err);
+	}
+
+	public static TileSetDescriptor load(BufferedReader in, PrintWriter err)
+	{
+		TileSetDescriptor result=null;
+		ArrayReader reader=new ArrayReader("TileSetDescriptor");
+		if(reader.load(in,err))
+		{
+			TileSetDescriptor d=new TileSetDescriptor();
+			boolean ok=true;
+			for(Property p: Property.values())
+			{
+				int [] values=reader.getColumn(propertyNames[p.ordinal()],err);
+				ok=values!=null;
+				if(!ok)
+				{
+					break;
+				}
+				else switch(p)
+				{
+					case BOARD_WIDTH: d.boardWidth = values[0]; break;
+					case BOARD_HEIGHT: d.boardHeight = values[0]; break;
+					case TILES_ACROSS: d.tilesAcross = values[0]; break;
+					case TILES_DOWN: d.tilesDown = values[0]; break;
+					//Convert back to int
+					case FIT_EDGE_TILES: d.fitEdgeTiles = (values[0]==0?false:true); break;
+					case LEFT_OFFSET: d.leftOffset = values[0]; break;
+					case TOP_OFFSET: d.topOffset = values[0]; break;
+					//Convert back to double
+					case SCALE_FACTOR: d.scaleFactor = ((double)values[0])/((double)0x01000000); break;
+					case TILE_WIDTH: d.tileWidth = values[0]; break;
+					case TILE_HEIGHT: d.tileHeight = values[0]; break;
+					case TILE_SPACING_X: d.tileSpacingX = values[0]; break;
+					case TILE_SPACING_Y: d.tileSpacingY = values[0]; break;
+					case TILE_COUNT: d.tileCount = values[0]; break;
+					case ROTATION_STEPS: d.rotationSteps = values[0]; break;
+					case SIDE_COUNT: d.sideCount = values[0]; break;
+					//Convert back to double
+					case HEIGHT_WIDTH_RATIO: d.heightWidthRatio = ((double)values[0])/((double)0x01000000); break;
+					case TILE_MARGIN: d.tileMargin = values[0]; break;
+					default:
+						ok=false;
+						err.println("TileSetDescriptor: unknown property: " + p.toString() + ".");
+						break;
+				}
+			}
+			if(ok) result=d;
+		}
+		return result;
 	}
 }

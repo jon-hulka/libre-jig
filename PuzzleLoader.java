@@ -18,6 +18,9 @@
 /**
  * changelog:
  * 
+ * 2011 12 19 - Jon
+ *  - Finished implementing save and load functions
+ * 
  * 2011 03 18 - Jon
  * Created PuzzleLoader for clean implementation of save and load functions.
  */
@@ -30,18 +33,33 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
 
 import java.awt.Dimension;
+import java.awt.Color;
 
 import java.io.FileNotFoundException;
-import java.io.PrintStream;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.FileReader;
 import java.net.URISyntaxException;
+
+import hulka.util.ArrayWriter;
+import hulka.util.ArrayReader;
 
 public class PuzzleLoader
 {
-	NewPuzzleDialog newDialog;
-	JFrame frame;
+	private NewPuzzleDialog newDialog;
+	private JFrame frame;
 	GUI gui;
-	PuzzleHandler puzzleHandler=null;
-	JFileChooser savedGameChooser=null;
+	private PuzzleHandler puzzleHandler=null;
+	private JFileChooser savedGameChooser=null;
+	//Save file extension
+	private static final String SAVE_FILE_EXTENSION="ljf";
+	//Earliest game version save files are compatible with
+	//Change this only if save file formats change
+	private static final int [] SAVE_COMPATIBLE_VERSION={2011,12,15};
 
 	private PuzzleLoader(){}
 	public PuzzleLoader(GUI gui) throws FileNotFoundException, URISyntaxException
@@ -90,6 +108,40 @@ public class PuzzleLoader
 		}
 		return result;
 	}
+	
+	public void loadGame()
+	{
+		JFileChooser savedGameChooser = getSavedGameChooser();
+		File saveFile=null;
+		int cValue = savedGameChooser.showOpenDialog(frame);
+		if(cValue == JFileChooser.APPROVE_OPTION)
+		{
+			try
+			{
+				saveFile=savedGameChooser.getSelectedFile();
+			}catch(Exception ex){ex.printStackTrace();}
+		}
+		
+		if(saveFile!=null)
+		{
+			if(saveFile.exists())
+			{
+				if(!saveFile.isFile())
+				{
+					gui.showErrorDialog(saveFile.getName()+" is not a file.","Load");
+				}
+				else if(closeGame())
+				{
+					loadGame(saveFile);
+				}
+			}
+			else
+			{
+				gui.showErrorDialog(saveFile.getName()+" does not exist.","Load");
+			}
+		}
+
+	}
 
 	private void toggleMenus(PuzzleHandler handler)
 	{
@@ -123,7 +175,7 @@ public class PuzzleLoader
 		if(savedGameChooser==null)
 		{
 			savedGameChooser = new JFileChooser();
-			FileNameExtensionFilter filter = new FileNameExtensionFilter("Saved Puzzles","vtp");
+			FileNameExtensionFilter filter = new FileNameExtensionFilter("Saved Puzzles",SAVE_FILE_EXTENSION);
 			savedGameChooser.setFileFilter(filter);
 			savedGameChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			savedGameChooser.setAcceptAllFileFilterUsed(false);
@@ -148,9 +200,9 @@ public class PuzzleLoader
 		{
 			String path=saveFile.getAbsolutePath();
 			//Check the extension
-			if(!path.substring(path.length()-4).equals(".vtp"))
+			if(!path.substring(path.length()-4).equals("."+SAVE_FILE_EXTENSION))
 			{
-				path=path+".vtp";
+				path=path+"."+SAVE_FILE_EXTENSION;
 				saveFile=new File(path);
 			}
 
@@ -162,6 +214,7 @@ public class PuzzleLoader
 				}
 				else if(gui.showConfirmDialog("Overwrite file " + saveFile.getName() + "?","Save"))
 				{
+					try{saveFile.delete();}catch(Exception ex){/*No harm trying...*/}
 					saveGame(saveFile);
 				}
 			}
@@ -172,16 +225,138 @@ public class PuzzleLoader
 	
 	private void saveGame(File saveFile)
 	{
+		boolean result=true;
+		StringWriter errorMessage=new StringWriter();
+		PrintWriter err=new PrintWriter(errorMessage);
 		try
 		{
-			PrintStream out=new PrintStream(saveFile);
+			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(saveFile)));
+			//Not used for anything at the moment, just nice to know what version is being used
 			out.println("version:"+gui.getAppVersion());
-			puzzleHandler.save(out);
+			Color backgroundColor=gui.getBoardCanvas().getBackground();
+			//Save compatible version
+			result=new ArrayWriter(3,1,"compatibleVersion").save(
+				new int [][] {{SAVE_COMPATIBLE_VERSION[0]},{SAVE_COMPATIBLE_VERSION[1]},{SAVE_COMPATIBLE_VERSION[2]}},
+				new String [] {"y","m","d"},
+				out,err);
+			//Save background color
+			if(result) result=new ArrayWriter(3,1,"backgroundColor").save(
+				new int [][] {{backgroundColor.getRed()},{backgroundColor.getGreen()},{backgroundColor.getBlue()}},
+				new String [] {"r","g","b"},
+				out,err);
+			if(result) result = newDialog.save(out,err);
+			if(result) result = ((JigsawHandler)puzzleHandler).save(out,err);
 			out.close();
+			if(!result)
+			{
+				try{saveFile.delete();}catch(Exception ex){/*No harm trying...*/}
+			}
 		}
 		catch(Exception ex)
 		{
-			gui.showErrorDialog("Unable to save "+saveFile.getName()+"\n"+ex.getMessage(),"Save");
+			result=false;
+			err.println("Unable to save "+saveFile.getName()+" in PuzzleLoader\n"+ex.getMessage());
+		}
+		err.close();
+
+		if(!result)
+		{
+			gui.showErrorDialog(errorMessage.toString() ,"Save error");
+		}
+	}
+	
+	private void loadGame(File loadFile)
+	{
+		boolean result=true;
+		ArrayReader reader=null;
+
+		StringWriter errorMessage=new StringWriter();
+		PrintWriter err=new PrintWriter(errorMessage);
+		String line=null;
+		String color=null;
+		String compatibleVersion=null;
+		BufferedReader in=null;
+		
+		Color backgroundColor=null;
+
+		try
+		{
+			in = new BufferedReader(new FileReader(loadFile));
+
+			//Version
+			if(result)
+			{
+				line=in.readLine();
+				result=line!=null;
+			}
+			
+			if(!result)
+			{
+				err.println("PuzzleLoader: Unexpected end of file.");
+			}
+		}
+		catch(IOException ex)
+		{
+			result=false;
+			err.println("PuzzleLoader: Unable to read file: " + ex.getMessage());
+		}
+
+		//Compatible version
+		if(result)
+		{
+			reader = new ArrayReader("compatibleVersion");
+			result = reader.load(in,err);
+		}
+		
+		int [][] values = new int[3][];
+		String [] columnNames={"y","m","d"};
+		for(int i=0; result && i<3; i++)
+		{
+			values[i] = reader.getColumn(columnNames[i],err);
+			result=values[i]!=null;
+		}
+		if(result && (values[0][0]!=SAVE_COMPATIBLE_VERSION[0] || values[1][0]!=SAVE_COMPATIBLE_VERSION[1] || values[2][0]!=SAVE_COMPATIBLE_VERSION[2]))
+		{
+			result=false;
+			err.println("PuzzleLoader: The saved file is incompatible with this version.");
+		}
+		
+		//Background color
+		if(result)
+		{
+			reader = new ArrayReader("backgroundColor");
+			result = reader.load(in,err);
+		}
+		
+		columnNames= new String []{"r","g","b"};
+		for(int i=0; result && i<3; i++)
+		{
+			values[i] = reader.getColumn(columnNames[i],err);
+			result=values[i]!=null;
+		}
+		
+		if(result) backgroundColor=new Color(values[0][0],values[1][0],values[2][0]);
+		
+		if(result) result = newDialog.load(in,err);
+		
+		if(result)
+		{
+			Dimension boardSize=gui.getBoardSize();
+			PuzzleCanvas boardCanvas=gui.getBoardCanvas();
+			boardCanvas.setPuzzleImage(newDialog.getScaledImage(boardSize));
+//Todo - integrate saving and loading of meanColor into newDialog
+			boardCanvas.setBackground(backgroundColor);
+//Todo - boardsize passed in here for scaling
+			puzzleHandler=PuzzleHandler.load(boardCanvas,in,err);
+			toggleMenus(puzzleHandler);
+			gui.addActionListener("game",puzzleHandler);
+			result=puzzleHandler!=null;
+		}
+
+		
+		if(!result)
+		{
+			gui.showErrorDialog(errorMessage.toString() ,"Load error");
 		}
 	}
 }

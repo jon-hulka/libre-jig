@@ -1,5 +1,5 @@
 /** 
- *   Copyright (C) 2010  Jonathan Hulka
+ *   Copyright (C) 2010 Jonathan Hulka (jon.hulka@gmail.com)
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package hulka.tilemanager;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
@@ -40,9 +41,24 @@ public class HexTileManager extends AbstractTileManagerImpl
 	//Temporary storage to avoid excessive heap usage
 	private Point tempIndex=new Point(), tempNeighbor=new Point();
 
+	/**
+	 * To satisfy HexJigsawManager's mimimal constructor.
+	 */
+	protected HexTileManager(TileSetDescriptor descriptor)
+	{
+		super(descriptor);
+		this.descriptor=descriptor;
+		initMask();
+	}
+
 	public HexTileManager(int boardWidth, int boardHeight, int tilesAcross, int tilesDown, boolean fitEdgeTiles)
 	{
 		super(boardWidth,boardHeight,tilesAcross,tilesDown, fitEdgeTiles);
+		initMask();
+	}
+	
+	private void initMask()
+	{
 		maskPoints=new Point2D.Double[SIDE_COUNT];
 		maskPoints[0]=new Point2D.Double(((double)descriptor.tileWidth)/2.0,0.0);
 		maskPoints[1]=new Point2D.Double(((double)descriptor.tileWidth),((double)descriptor.tileHeight)/4.0);

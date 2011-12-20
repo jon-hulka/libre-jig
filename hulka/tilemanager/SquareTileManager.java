@@ -39,12 +39,27 @@ public class SquareTileManager extends AbstractTileManagerImpl
 
 	protected static Point [] neighborOffsetIndex = {new Point(0,-1),new Point(1,0),new Point(0,1),new Point(-1,0)};
 
+	/**
+	 * To satisfy SquareJigsawManager's mimimal constructor.
+	 */
+	protected SquareTileManager(TileSetDescriptor descriptor)
+	{
+		super(descriptor);
+		this.descriptor=descriptor;
+		initMask();
+	}
+
 	public SquareTileManager(int boardWidth, int boardHeight, int tilesAcross, int tilesDown)
 	{
 		super(boardWidth,boardHeight,tilesAcross,tilesDown,true);
+		initMask();
+	}
+	
+	private void initMask()
+	{
 		AffineTransform rotator = AffineTransform.getRotateInstance(2.0*Math.PI/((double)SIDE_COUNT),((double)descriptor.tileWidth)/2.0,((double)descriptor.tileWidth)/2.0);
 		maskPoints=new Point2D.Double[SIDE_COUNT];
-//03.12.2011 - maskPoints was never used before, so this error has not been discovered
+//2011.12.03 - maskPoints was never used before, so this error has not been discovered
 //		maskPoints[0]=new Point2D.Double(((double)descriptor.tileWidth)/2.0,0.0);
 		maskPoints[0]=new Point2D.Double(0.0,0.0);
 		for(int i=1; i<SIDE_COUNT; i++)

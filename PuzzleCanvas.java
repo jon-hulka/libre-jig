@@ -19,6 +19,10 @@
 
 /**
  * Changelog:
+ * 
+ * 2011 12 19 - Jon
+ *  - Finished implementing save and load functions
+ * 
  * 2011 06 06 - Jon
  * Changed dragBuffer dimensions to allow for multi-select (pieces may be further apart)
  * 2011 02 13 - Jon
@@ -66,7 +70,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import javax.swing.JFrame;
 import javax.swing.JColorChooser;
-import hulka.event.KeyStrokeAction;
 
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseListener;
@@ -429,6 +432,11 @@ public class PuzzleCanvas extends JBufferedCanvas
 		backgroundColor=color;
 		hsb=Color.RGBtoHSB(color.getRed(),color.getGreen(),color.getBlue(),hsb);
 		contrastColor=Color.getHSBColor(hsb[0]+0.5f,1-hsb[1],1-hsb[2]);
+	}
+	
+	public Color getBackground()
+	{
+		return backgroundColor;
 	}
 
 	public void chooseColor()

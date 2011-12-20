@@ -18,7 +18,11 @@
  */
 
 /**
- * changelog:
+ * Changelog:
+ * 
+ * 2011 12 19 - Jon
+ *  - Finished implementing save and load functions
+ * 
  * 2010 08 09 - Jon
  *  - Fixed OK button bug (button was enabled before any selections made)
  * 2010 07 26 - Jon
@@ -63,9 +67,12 @@ import java.awt.event.ActionEvent;
 
 //IO
 import java.net.URL;
+import java.net.MalformedURLException;
 import java.io.FileNotFoundException;
 import java.net.URISyntaxException;
-
+import java.io.PrintWriter;
+import java.io.BufferedReader;
+import java.io.IOException;
 
 public class NewPuzzleDialog extends JDialog implements ActionListener
 {
@@ -112,6 +119,7 @@ public class NewPuzzleDialog extends JDialog implements ActionListener
 	private ImageMap imageMap=null;
 	private JLabel previewPane=null;
 	private ImageIcon preview=null;
+	private URL imageURL=null;
 	private BufferedImage puzzleImage=null;
 	private Color meanColor=null;
 	private PuzzleHandler puzzleHandler=null;
@@ -261,8 +269,10 @@ public class NewPuzzleDialog extends JDialog implements ActionListener
 		return comboBox;
 	}
 
-	private void loadImage(URL url)
+	private boolean loadImage(URL url)
 	{
+		boolean result=true;
+		imageURL=null;
 		puzzleImage=null;
 		previewPane.setVisible(false);
 		if(url!=null)
@@ -273,23 +283,33 @@ public class NewPuzzleDialog extends JDialog implements ActionListener
 			}
 			catch(Exception ex)
 			{
-				JOptionPane.showMessageDialog(this,ex.getMessage(),"Error loading image",JOptionPane.ERROR_MESSAGE);
+				result=false;
 			}
-			if(puzzleImage!=null)
+			if(result)
 			{
-				int w=puzzleImage.getWidth();
-				int h=puzzleImage.getHeight();
-				int s=w>h?w:h;
-				w=w*PREVIEW_SIZE/s;
-				h=h*PREVIEW_SIZE/s;
-				BufferedImage pv = new BufferedImage(w,h,BufferedImage.TYPE_INT_ARGB);
-				Graphics g=pv.getGraphics();
-				g.drawImage(puzzleImage,0,0,w,h,null);
-				g.dispose();
-				preview.setImage(pv);
-				previewPane.setVisible(true);
+				if(puzzleImage!=null)
+				{
+					imageURL=url;
+					int w=puzzleImage.getWidth();
+					int h=puzzleImage.getHeight();
+					int s=w>h?w:h;
+					w=w*PREVIEW_SIZE/s;
+					h=h*PREVIEW_SIZE/s;
+					BufferedImage pv = new BufferedImage(w,h,BufferedImage.TYPE_INT_ARGB);
+					Graphics g=pv.getGraphics();
+					g.drawImage(puzzleImage,0,0,w,h,null);
+					g.dispose();
+					preview.setImage(pv);
+					previewPane.setVisible(true);
+					result=true;
+				}
+				else
+				{
+					result=false;
+				}
 			}
 		}
+		return result;
 	}
 
 	private void loadImage(int index)
@@ -299,8 +319,11 @@ public class NewPuzzleDialog extends JDialog implements ActionListener
 		try
 		{
 			URL url = Thread.currentThread().getContextClassLoader().getResource(imageMap.getImagePath(index));
-			loadImage(url);
 			meanColor=imageMap.getMeanColor(index);
+			if(!loadImage(url))
+			{
+				JOptionPane.showMessageDialog(this,"Error loading image","Error",JOptionPane.ERROR_MESSAGE);
+			}
 		}
 		catch(Exception ex)
 		{
@@ -482,9 +505,12 @@ public class NewPuzzleDialog extends JDialog implements ActionListener
 				int index=imageCombo.getSelectedIndex();
 				if(index==imageMap.size())
 				{
-					loadImage(MiscUtils.promptImageURL(null,null));
 					meanColor=new Color(128,128,128);
 					imageCombo.clearSelection();
+					if(!loadImage(MiscUtils.promptImageURL(null,null)))
+					{
+						JOptionPane.showMessageDialog(this,"Error loading image","Error",JOptionPane.ERROR_MESSAGE);
+					}
 				}
 				else if(index>=0)
 				{
@@ -524,5 +550,63 @@ public class NewPuzzleDialog extends JDialog implements ActionListener
 
 			actionsEnabled=true;
 		}
+	}
+	
+	public boolean save(PrintWriter out, PrintWriter err)
+	{
+		boolean result=true;
+		if(imageURL==null)
+		{
+			result=false;
+			err.println("NewPuzzleDialog.save: imageURL is null.");
+		}
+		
+		if(result)
+		{
+			out.println("NewPuzzleDialog");
+			out.println(imageURL.toString());
+		}
+		return result;
+	}
+	
+	public boolean load(BufferedReader in, PrintWriter err)
+	{
+		boolean result=true;
+		String line=null;
+		URL url=null;
+		try
+		{
+			line=in.readLine();
+			result=line!=null;
+			line=in.readLine();
+			result=line!=null;
+			if(!result)
+			{
+				err.println("NewPuzzleDialog.load: Unexpected end of file.");
+			}
+		}
+		catch(IOException ex)
+		{
+			result=false;
+			err.println("NewPuzzleDialog.load: " + ex.getMessage());
+		}
+
+		if(result)
+		{
+			try
+			{
+				url=new URL(line);
+			}
+			catch(MalformedURLException ex)
+			{
+				result=false;
+				err.println("NewPuzzleDialog.load: Invalid image file URL: " + line);
+			}
+		}
+		if(result && !loadImage(url))
+		{
+			err.println("Error loading image");
+		}
+		return result;
 	}
 }

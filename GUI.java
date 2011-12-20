@@ -185,9 +185,7 @@ class GUI
 	
 	public void loadGame()
 	{
-			JOptionPane.showMessageDialog(null,
-				"Feature not implemented yet",
-				"Load Game", JOptionPane.ERROR_MESSAGE);
+		puzzleLoader.loadGame();
 	}
 	
 	public void saveGame()
