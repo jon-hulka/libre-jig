@@ -18,6 +18,9 @@
 /**
  * Changelog:
  * 
+ * 2011 12 22 - Jon
+ *  - Fixed a bug in mouseReleased 'snap' loop that was preventing more than two connected sets from snapping together in some cases.
+ * 
  * 2011 12 19 - Jon
  *  - Finished implementing save and load functions
  * 
@@ -804,16 +807,22 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 									mrAnchor.x=mrPos.x;
 									mrAnchor.y=mrPos.y;
 									snapOffset=mrAnchor;
-									//the dragIndex group cannot be adjusted here because it would interfere with the connectedTiles.getNext() operation
+									//the dragIndex group is not adjusted here because it would interfere with the outer loop connectedTiles.getNext() operation
 								}
 								else
 								{
 									adjustment.x=snapOffset.x-adjustment.x;
 									adjustment.y=snapOffset.y-adjustment.y;
+									//This will mess up the outer loop connectedTiles.getNext() operation...
 									adjustTiles(connectedTiles,jIndex,adjustment);
+									//... so restore it here - go back to the beginning...
+									connectedTiles.setGroup(dragIndex);
+									//... and step through to the current position
+									for(int tmp=connectedTiles.getNext(); tmp>=0 && tmp!=i; tmp=connectedTiles.getNext());
 								}
 
 								//Add the tile and its neighbors to the list of tile sets that will be snapped together
+								//selectedTiles is not being used for anything else at the moment...
 								selectedTiles.connect(dragIndex,jIndex);
 								if(j > 0)
 								{
@@ -1377,6 +1386,9 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 	{
 		JigsawHandler result=null;
 		ArrayReader reader=null;
+		
+		//Default scale factor - This will be used if the puzzle is saved, then loaded at a different screen resolution.
+		double scaleFactor=1.0;
 
 		TileManager tileManager=null;
 		String managerType=null;
@@ -1409,6 +1421,9 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 		
 		if(tileManager!=null)
 		{
+//todo: JigsawManager should be scaled here
+//scaleFactor=tileManager.scaleTo(boardCanvas.getSize());
+System.out.println(boardCanvas.getSize());
 			reader=new ArrayReader("JigsawHandler");
 			if(reader.load(in,err))
 			{
@@ -1463,7 +1478,7 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 			
 			if(result != null)
 			{
-//todo scale x and y here to fit scaled tile sizes - this has to happen when scaling is implemented for JigsawManagers
+//todo scale x and y here (if necessary) to fit scaled tile sizes - this has to happen when scaling is implemented for JigsawManagers
 				for(int i=0; i<result.tiles.length; i++)
 				{
 					//Set up tiles
@@ -1495,6 +1510,7 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 				result=null;
 			}
 		}
+//todo clean up connected set scaling errors here (if scaling is necessary)
 
 		if(result!=null)
 		{

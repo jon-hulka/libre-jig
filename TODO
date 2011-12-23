@@ -1,3 +1,15 @@
+Bug:
+12 pc puzzle:
+connect 1,2,3
+connect 8,11,12
+connect 5,6,7
+line up the corners of 3 and 8
+put 5,6,7 in place. All three sets 'should' snap together, but they don't.
+Fix:
+ - JigsawHandler.mouseReleased is calling adjustTiles inside of this loop: for(int i=connectedTiles.getNext(); i>=0; i=connectedTiles.getNext())
+   This messes up the indexing that controls the 'for' loop
+ - rework the 'for' loop control so indexing is saved before calling adjustTiles and restored after
+
 CLEAN UP MouseSensetiveTile - need to rethink MouseSensetiveShapeManager - simplify, simplify, simplify
  - addShape(MouseSensetiveShape) needs to be changed to addShape(Shape shape,int index,int zOrder); MouseSensetiveShape doesn't add enough functionality to justify having a class of its own
    This will require reworking all the event handlers

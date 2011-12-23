@@ -341,12 +341,10 @@ public class PuzzleLoader
 		
 		if(result)
 		{
-			Dimension boardSize=gui.getBoardSize();
+//			Dimension boardSize=gui.getBoardSize();
 			PuzzleCanvas boardCanvas=gui.getBoardCanvas();
 			boardCanvas.setPuzzleImage(newDialog.getScaledImage(boardSize));
-//Todo - integrate saving and loading of meanColor into newDialog
 			boardCanvas.setBackground(backgroundColor);
-//Todo - boardsize passed in here for scaling
 			puzzleHandler=PuzzleHandler.load(boardCanvas,in,err);
 			toggleMenus(puzzleHandler);
 			gui.addActionListener("game",puzzleHandler);
