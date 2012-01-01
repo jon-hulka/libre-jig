@@ -1386,6 +1386,7 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 	{
 		JigsawHandler result=null;
 		ArrayReader reader=null;
+		Dimension boardSize=boardCanvas.getSize();
 		
 		//Default scale factor - This will be used if the puzzle is saved, then loaded at a different screen resolution.
 		double scaleFactor=1.0;
@@ -1408,11 +1409,11 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 		
 		if("HexJigsawManager".equals(managerType))
 		{
-			tileManager=HexJigsawManager.load(in,err);
+			tileManager=HexJigsawManager.load(in,err,boardSize);
 		}
 		else if("SquareJigsawManager".equals(managerType))
 		{
-			tileManager=SquareJigsawManager.load(in,err);
+			tileManager=SquareJigsawManager.load(in,err,boardSize);
 		}
 		else
 		{
@@ -1421,9 +1422,6 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 		
 		if(tileManager!=null)
 		{
-//todo: JigsawManager should be scaled here
-//scaleFactor=tileManager.scaleTo(boardCanvas.getSize());
-System.out.println(boardCanvas.getSize());
 			reader=new ArrayReader("JigsawHandler");
 			if(reader.load(in,err))
 			{
@@ -1479,6 +1477,8 @@ System.out.println(boardCanvas.getSize());
 			if(result != null)
 			{
 //todo scale x and y here (if necessary) to fit scaled tile sizes - this has to happen when scaling is implemented for JigsawManagers
+// - Find upper, lower, left, and right bounds of each connected set
+// - Scale the center point
 				for(int i=0; i<result.tiles.length; i++)
 				{
 					//Set up tiles

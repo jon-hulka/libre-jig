@@ -36,6 +36,7 @@ import java.util.Random;
 import java.awt.geom.Point2D;
 import java.awt.Point;
 import java.awt.Shape;
+import java.awt.Dimension;
 
 import java.io.PrintWriter;
 import java.io.BufferedReader;
@@ -390,10 +391,16 @@ public class HexJigsawManager extends HexTileManager
 		return result;
 	}
 	
-	public static HexJigsawManager load(BufferedReader in, PrintWriter err)
+	public static HexJigsawManager load(BufferedReader in, PrintWriter err,Dimension boardSize)
 	{
 		HexJigsawManager result=null;
 		TileSetDescriptor descriptor=TileSetDescriptor.load(in,err);
+		if(descriptor.boardWidth>boardSize.width || descriptor.boardHeight>boardSize.height)
+		{
+			//For now - not allowing the display area to change
+			err.println("You have changed your screen settings.\nAt this time, puzzles cannot be loaded at a lower screen resolution than they were saved at.\nA puzzle scaling feature is currently under development.");
+			descriptor=null;
+		}
 //Todo scale to fit here - it might make most sense to give descriptor the new size and let it figure out the scaling
 		if(descriptor!=null)
 		{
