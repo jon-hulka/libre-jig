@@ -1,20 +1,19 @@
-JAR_EXECUTABLE = puzzlegames.jar
+JAR_EXECUTABLE = libre-jigsaw.jar
 JAR_MAINCLASS = GUI
 JAR_CONTENTS = $(SOURCE_FILES) $(CLASS_FILES) $(CONFIG_FILES) $(RESOURCE_FILES)
-CLASS_FILES = *.class hulka/event/*.class hulka/gui/HTMLDialog.class hulka/gui/HTMLDialogHandler.class hulka/graphics/JBufferedCanvas.class hulka/util/JVMVersion.class hulka/util/MiscUtils.class hulka/gui/ImageListCellRenderer.class hulka/gui/JSimpleImageCombo.class hulka/gui/UnselectedListCellRenderer.class
 
-SOURCE_FILES_GUI = hulka/gui/HTMLDialog.java hulka/gui/HTMLDialogHandler.java hulka/gui/ImageListCellRenderer.java hulka/gui/JSimpleImageCombo.java hulka/gui/UnselectedListCellRenderer.java
-CLASS_FILES_GUI = hulka/gui/HTMLDialog.class hulka/gui/HTMLDialogHandler.class hulka/gui/ImageListCellRenderer.class hulka/gui/JSimpleImageCombo.class hulka/gui/UnselectedListCellRenderer.class
+# SOURCE_FILES_GUI   = hulka/gui/HTMLDialog.java  hulka/gui/HTMLDialogHandler.java  hulka/gui/ImageListCellRenderer.java  hulka/gui/JSimpleImageCombo.java  hulka/gui/UnselectedListCellRenderer.java
+# CLASS_FILES_GUI    = hulka/gui/HTMLDialog.class hulka/gui/HTMLDialogHandler.class hulka/gui/ImageListCellRenderer.class hulka/gui/JSimpleImageCombo.class hulka/gui/UnselectedListCellRenderer.class
 SOURCE_FILES_EVENT = hulka/event/*.java
-CLASS_FILES_EVENT = hulka/event/*.class
-SOURCE_FILES_GUI = hulka/gui/*.java
-CLASS_FILES_GUI = hulka/gui/*.class
-SOURCE_FILES_UTIL = hulka/util/ImageMap.java hulka/util/JVMVersion.java hulka/util/MiscUtils.java
-CLASS_FILES_UTIL = hulka/util/ImageMap.class hulka/util/JVMVersion.class hulka/util/MiscUtils.class
-SOURCE_FILES_TILE = hulka/tilemanager/AbstractTileManagerImpl.java hulka/tilemanager/HexJigsawManager.java hulka/tilemanager/HexSpinnerManager.java hulka/tilemanager/HexTileManager.java hulka/tilemanager/SquareJigsawManager.java hulka/tilemanager/SquareTileManager.java hulka/tilemanager/TileManager.java hulka/tilemanager/TileSetDescriptor.java hulka/tilemanager/TileSpinnerManager.java
-CLASS_FILES_TILE = hulka/tilemanager/AbstractTileManagerImpl.class hulka/tilemanager/HexJigsawManager.class hulka/tilemanager/HexSpinnerManager.class hulka/tilemanager/HexTileManager.class hulka/tilemanager/SquareJigsawManager.class hulka/tilemanager/SquareTileManager.class hulka/tilemanager/TileManager.class hulka/tilemanager/TileSetDescriptor.class hulka/tilemanager/TileSpinnerManager.class
-SOURCE_FILES_XML = hulka/xml/SimpleXMLReader.java hulka/xml/SimpleXMLToken.java hulka/xml/SimpleXMLMatcherFactory.java hulka/xml/SimpleXMLEncoder.java
-CLASS_FILES_XML = hulka/xml/SimpleXMLReader.class hulka/xml/SimpleXMLToken.class hulka/xml/SimpleXMLMatcherFactory.class hulka/xml/SimpleXMLEncoder.class
+CLASS_FILES_EVENT  = hulka/event/*.class
+SOURCE_FILES_GUI   = hulka/gui/*.java
+CLASS_FILES_GUI    = hulka/gui/*.class
+SOURCE_FILES_UTIL  = hulka/util/ArrayWriter.java  hulka/util/ArrayReader.java  hulka/util/ImageMap.java  hulka/util/JVMVersion.java  hulka/util/MiscUtils.java
+CLASS_FILES_UTIL   = hulka/util/ArrayWriter.class hulka/util/ArrayReader.class hulka/util/ImageMap.class hulka/util/JVMVersion.class hulka/util/MiscUtils.class
+SOURCE_FILES_TILE  = hulka/tilemanager/JigsawCutter.java  hulka/tilemanager/AbstractTileManagerImpl.java  hulka/tilemanager/HexJigsawManager.java   hulka/tilemanager/HexSpinnerManager.java  hulka/tilemanager/HexTileManager.java  hulka/tilemanager/SquareJigsawManager.java   hulka/tilemanager/SquareTileManager.java  hulka/tilemanager/TileManager.java  hulka/tilemanager/TileSetDescriptor.java   hulka/tilemanager/TileSpinnerManager.java
+CLASS_FILES_TILE   = hulka/tilemanager/JigsawCutter.class hulka/tilemanager/AbstractTileManagerImpl.class hulka/tilemanager/HexJigsawManager*.class hulka/tilemanager/HexSpinnerManager.class hulka/tilemanager/HexTileManager.class hulka/tilemanager/SquareJigsawManager*.class hulka/tilemanager/SquareTileManager.class hulka/tilemanager/TileManager.class hulka/tilemanager/TileSetDescriptor*.class hulka/tilemanager/TileSpinnerManager.class
+SOURCE_FILES_XML   = hulka/xml/SimpleXMLReader.java  hulka/xml/SimpleXMLToken.java  hulka/xml/SimpleXMLMatcherFactory.java  hulka/xml/SimpleXMLEncoder.java
+CLASS_FILES_XML    = hulka/xml/SimpleXMLReader.class hulka/xml/SimpleXMLToken.class hulka/xml/SimpleXMLMatcherFactory.class hulka/xml/SimpleXMLEncoder.class
 
 SOURCE_FILES_GAME = *.java
 CLASS_FILES_GAME = *.class

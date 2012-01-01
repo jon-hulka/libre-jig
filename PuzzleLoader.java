@@ -341,7 +341,7 @@ public class PuzzleLoader
 		
 		if(result)
 		{
-//			Dimension boardSize=gui.getBoardSize();
+			Dimension boardSize=gui.getBoardSize();
 			PuzzleCanvas boardCanvas=gui.getBoardCanvas();
 			boardCanvas.setPuzzleImage(newDialog.getScaledImage(boardSize));
 			boardCanvas.setBackground(backgroundColor);

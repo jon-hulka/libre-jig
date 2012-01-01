@@ -1,14 +1,4 @@
-Bug:
-12 pc puzzle:
-connect 1,2,3
-connect 8,11,12
-connect 5,6,7
-line up the corners of 3 and 8
-put 5,6,7 in place. All three sets 'should' snap together, but they don't.
-Fix:
- - JigsawHandler.mouseReleased is calling adjustTiles inside of this loop: for(int i=connectedTiles.getNext(); i>=0; i=connectedTiles.getNext())
-   This messes up the indexing that controls the 'for' loop
- - rework the 'for' loop control so indexing is saved before calling adjustTiles and restored after
+
 
 CLEAN UP MouseSensetiveTile - need to rethink MouseSensetiveShapeManager - simplify, simplify, simplify
  - addShape(MouseSensetiveShape) needs to be changed to addShape(Shape shape,int index,int zOrder); MouseSensetiveShape doesn't add enough functionality to justify having a class of its own
@@ -17,17 +7,6 @@ CLEAN UP MouseSensetiveTile - need to rethink MouseSensetiveShapeManager - simpl
 add a compatibility version to the save files (puzzle loader can check to make sure newer version files are still compatible)
 new version checker - only at user's request
 
-vxxxx.xx.xx (software version)
-i<path>
-bw|h (boardsize)
-p0 (puzzle type - only jigsaw for now)
-sx (shape - 0 square or 1 hex for jigsaw)
-cn (piece count) followed by n values
-(x|y|r|c:)^n
-position/rotation/connected values
-
-
-on load
 >>>>- This release -<<<<
  - Save-option for the current puzzle. Solving big puzzles needs a lot of
 time and that isn't always possible. Therefore it would be nice if the
@@ -41,9 +20,9 @@ MouseSensetiveShapeManager efficiency
 
 Image rendering efficiency - are there ways to cut down on image processing?
 
-Make a 'child safe' mode - fullscreen with only game play and selection options and a key combination to exit.
+Layer transparency (show lower layers at ~30% opacity? -- optional)
 
-Fixed??? - selection is pixellated - should be antialiased
+Make a 'child safe' mode - fullscreen with only game play and selection options and a key combination to exit.
 
 Have a 'send to a friend' feature - allow your own images.
 
@@ -84,3 +63,23 @@ But would be worse, you know better - my experience in puzzled is limited.
 ***slider-zoom level
 
 Do you plan on a version of games that would work in a browser directly?
+
+
+==========================================
+Fixed bugs:
+==========================================
+
+Fixed??? - selection is pixellated - should be antialiased
+
+Bug:
+12 pc puzzle:
+connect 1,2,3
+connect 8,11,12
+connect 5,6,7
+line up the corners of 3 and 8
+put 5,6,7 in place. All three sets 'should' snap together, but they don't.
+Fix:
+ - JigsawHandler.mouseReleased is calling adjustTiles inside of this loop: for(int i=connectedTiles.getNext(); i>=0; i=connectedTiles.getNext())
+   This messes up the indexing that controls the 'for' loop
+ - rework the 'for' loop control so indexing is saved before calling adjustTiles and restored after
+==========================================
