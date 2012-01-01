@@ -17,6 +17,8 @@
 
 /**
  * Changelog:
+ * 2011 12 31 - Jon
+ * Added a focus request to fix keyboard events issue.
  * 
  * 2011 03 18 - Jon
  * Moved ui into PuzzleHandler (common to all PuzzleHandler implementations)
@@ -291,7 +293,10 @@ public class SpinnerHandler extends PuzzleHandler implements MouseMotionListener
 	public void onPreview(){}
 	public void mousePressed(MouseEvent e){}
 	public void mouseReleased(MouseEvent e){}
-	public void mouseEntered(MouseEvent e){}
+	public void mouseEntered(MouseEvent e)
+	{
+		ui.requestFocusInWindow();
+	}
 	public void mouseExited(MouseEvent e){}
 
 	public boolean save(PrintStream out)
