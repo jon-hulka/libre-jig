@@ -18,6 +18,9 @@
 /**
  * changelog:
  * 
+ * 2012 01 02 - Jon
+ *  - Fixed File->Save menu item enabling/disabling so it is available when appropriate
+ * 
  * 2011 12 19 - Jon
  *  - Finished implementing save and load functions
  * 
@@ -64,7 +67,7 @@ public class PuzzleLoader
 	private PuzzleLoader(){}
 	public PuzzleLoader(GUI gui) throws FileNotFoundException, URISyntaxException
 	{
-		newDialog=new NewPuzzleDialog(null);
+		newDialog=new NewPuzzleDialog(gui.getFrame());
 		this.gui=gui;
 	}
 
@@ -74,7 +77,7 @@ public class PuzzleLoader
 //To do: once save and load are implemented, integrate a gamesaved flag
 		ok=puzzleHandler==null||puzzleHandler.isGameComplete()||puzzleHandler.isGameSaved();
 
-		if(!ok)ok=JOptionPane.showConfirmDialog(null,"Close current game?","Closing Game.",JOptionPane.OK_CANCEL_OPTION)==JOptionPane.OK_OPTION;
+		if(!ok)ok=JOptionPane.showConfirmDialog(gui.getFrame(),"Close current game?","Closing Game.",JOptionPane.OK_CANCEL_OPTION)==JOptionPane.OK_OPTION;
 
 		if(ok)
 		{
@@ -163,6 +166,10 @@ public class PuzzleLoader
 				gui.setMenuEnabled("layer1",true);
 				gui.setMenuEnabled("layer2",true);
 				gui.setMenuEnabled("layer3",true);
+			}
+			else
+			{
+				gui.setMenuEnabled("save",false);
 			}
 			gui.setMenuEnabled("preview",true);
 			gui.setMenuEnabled("color",true);

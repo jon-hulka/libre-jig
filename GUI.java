@@ -17,6 +17,10 @@
 
 /**
  * Changelog
+ * 2012 01 02 - Jon
+ *  - Fixed File->Save menu item enabling/disabling so it is available when appropriate
+ * 2012 01 02 - Jon
+ *  - Added getFrame so PuzzleLoader can pass a parent window on to NewPuzzleDialog.
  * 2011 03 18 - Jon
  *  - Removed game menu handling from GUI (GUI no longer has any direct interaction with PuzzleHandler)
  * 2011 02 11 - Jon
@@ -98,6 +102,11 @@ class GUI
 		if(buildGui()) showGui();
 	}
 	
+	public JFrame getFrame()
+	{
+		return guiLoader.getFrame();
+	}
+	
 	private boolean buildGui()
 	{
 		boolean result = false;
@@ -105,11 +114,11 @@ class GUI
 		if(guiLoader.loadGUI())
 		{
 			result=false;
+			frame = guiLoader.getFrame();
 			try
 			{
 				puzzleLoader=new PuzzleLoader(this);
 			}catch(Exception ex){ex.printStackTrace();}
-			frame = guiLoader.getFrame();
 			FileMenuListener fml=new FileMenuListener(this);
 			frame.addWindowListener(fml);
 			guiLoader.getActionCoordinator().addActionListener("file",fml);
@@ -121,7 +130,7 @@ class GUI
 			frame.pack();
 			frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 //			guiLoader.getMenuItem("load").setEnabled(false);
-//			guiLoader.getMenuItem("save").setEnabled(false);
+			guiLoader.getMenuItem("save").setEnabled(false);
 			guiLoader.getMenuItem("preview").setEnabled(false);
 			guiLoader.getMenuItem("color").setEnabled(false);
 			guiLoader.getMenuItem("layer1").setEnabled(false);
@@ -163,8 +172,8 @@ class GUI
 		boardSize=new Dimension(area.width,area.height);
 		boardCanvas=new PuzzleCanvas(boardSize);
 		boardPane.setViewportView(boardCanvas);
-
-		guiLoader.showDocument("credits");
+		//Credits screen seems a bit much
+//		guiLoader.showDocument("credits");
 		startGame();
 	}
 	

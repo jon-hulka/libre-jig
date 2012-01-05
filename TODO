@@ -1,4 +1,4 @@
-
+Splash screen - put together a nice animated "Speed Duck" gif
 
 CLEAN UP MouseSensetiveTile - need to rethink MouseSensetiveShapeManager - simplify, simplify, simplify
  - addShape(MouseSensetiveShape) needs to be changed to addShape(Shape shape,int index,int zOrder); MouseSensetiveShape doesn't add enough functionality to justify having a class of its own
