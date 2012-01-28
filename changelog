@@ -1,3 +1,5 @@
+Future changes will be logged via git
+
 2011 06 06 - Jon
 	- JigsawHandler
 	 - bug fix: if two edges (three corners) were completed together, drag allowance wasn't permitting the edge of the resulting connected set to be on the board.
