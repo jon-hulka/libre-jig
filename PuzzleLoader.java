@@ -17,6 +17,8 @@
 
 /**
  * changelog:
+ * 2012 02 02 - Jon
+ *  - Changed the compatible version, save file format has changed.
  * 
  * 2012 01 02 - Jon
  *  - Fixed File->Save menu item enabling/disabling so it is available when appropriate
@@ -62,7 +64,7 @@ public class PuzzleLoader
 	private static final String SAVE_FILE_EXTENSION="ljf";
 	//Earliest game version save files are compatible with
 	//Change this only if save file formats change
-	private static final int [] SAVE_COMPATIBLE_VERSION={2011,12,15};
+	private static final int [] SAVE_COMPATIBLE_VERSION={2012,01,31};
 
 	private PuzzleLoader(){}
 	public PuzzleLoader(GUI gui) throws FileNotFoundException, URISyntaxException

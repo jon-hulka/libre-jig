@@ -1,7 +1,7 @@
 /**
  *      PuzzleCanvas.java
  *      
- *      Copyright 2010 Jonathan Hulka <jon.hulka@gmail.com>
+ *      Copyright 2010 - 2012 Jonathan Hulka <jon.hulka@gmail.com>
  *      
  *      This program is free software: you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by

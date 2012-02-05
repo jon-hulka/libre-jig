@@ -1,5 +1,5 @@
 /**
- *   Copyright (C) 2010  Jonathan Hulka
+ *   Copyright (C) 2010 - 2012  Jonathan Hulka
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -38,16 +38,6 @@ public class SquareTileManager extends AbstractTileManagerImpl
 	private Point tempIndex=new Point(), tempNeighbor=new Point();
 
 	protected static Point [] neighborOffsetIndex = {new Point(0,-1),new Point(1,0),new Point(0,1),new Point(-1,0)};
-
-	/**
-	 * To satisfy SquareJigsawManager's mimimal constructor.
-	 */
-	protected SquareTileManager(TileSetDescriptor descriptor)
-	{
-		super(descriptor);
-		this.descriptor=descriptor;
-		initMask();
-	}
 
 	public SquareTileManager(int boardWidth, int boardHeight, int tilesAcross, int tilesDown)
 	{
@@ -235,5 +225,19 @@ public class SquareTileManager extends AbstractTileManagerImpl
 			d.tileCount=d.tilesAcross*d.tilesDown;
 		}
 		return d;
+	}
+
+	/**
+	 * For SquareJigsawManager's 'scaling' constructor
+	 */
+	protected SquareTileManager(TileSetDescriptor oldDescriptor, int boardWidth, int boardHeight)
+	{
+		super(oldDescriptor,boardWidth,boardHeight);
+		initMask();
+	}
+	public TileSetDescriptor adjustTileSetDescriptor(TileSetDescriptor oldDescriptor, int boardWidth, int boardHeight)
+	{
+		//Load and save not available for this implementation.
+		return null;
 	}
 }

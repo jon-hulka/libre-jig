@@ -298,4 +298,10 @@ public class HexSpinnerManager extends HexTileManager implements TileSpinnerMana
 		}
 		return indices;
 	}
+
+	public TileSetDescriptor adjustTileSetDescriptor(TileSetDescriptor oldDescriptor, int boardWidth, int boardHeight)
+	{
+		//Load and save not available for this implementation.
+		return null;
+	}
 }

@@ -1,5 +1,5 @@
 /** 
- *   Copyright (C) 2010 Jonathan Hulka (jon.hulka@gmail.com)
+ *   Copyright (C) 2010 - 2012 Jonathan Hulka (jon.hulka@gmail.com)
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -40,16 +40,6 @@ public class HexTileManager extends AbstractTileManagerImpl
 
 	//Temporary storage to avoid excessive heap usage
 	private Point tempIndex=new Point(), tempNeighbor=new Point();
-
-	/**
-	 * To satisfy HexJigsawManager's mimimal constructor.
-	 */
-	protected HexTileManager(TileSetDescriptor descriptor)
-	{
-		super(descriptor);
-		this.descriptor=descriptor;
-		initMask();
-	}
 
 	public HexTileManager(int boardWidth, int boardHeight, int tilesAcross, int tilesDown, boolean fitEdgeTiles)
 	{
@@ -289,5 +279,18 @@ public class HexTileManager extends AbstractTileManagerImpl
 		}
 		return result;
 	}
+
+	/**
+	 * For HexJigsawManager's 'scaling' constructor
+	 */
+	protected HexTileManager(TileSetDescriptor oldDescriptor, int boardWidth, int boardHeight)
+	{
+		super(oldDescriptor,boardWidth,boardHeight);
+		initMask();
+	}
+	public TileSetDescriptor adjustTileSetDescriptor(TileSetDescriptor oldDescriptor, int boardWidth, int boardHeight)
+	{
+		//Load and save not available for this implementation.
+		return null;
+	}
 }
-	

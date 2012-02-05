@@ -17,6 +17,8 @@
 
 /**
  * Changelog:
+ * 2012 02 02 - Jon
+ *  - Implemented scaling when loading a puzzle on a different screen resolution.
  * 
  * 2011 12 22 - Jon
  *  - Fixed a bug in mouseReleased 'snap' loop that was preventing more than two connected sets from snapping together in some cases.
@@ -117,7 +119,6 @@ import java.util.Arrays;
 
 public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeListener, MouseListener, MouseMotionListener, KeyListener
 {
-//	PuzzleCanvas ui;
 	private TileManager tileManager;
 	private Random random=new Random();
 
@@ -1185,19 +1186,9 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 				tiles[i].moveTo(mtPoint.x - offs,mtPoint.y - offs);
 			}
 
-			int x1 = tiles[tileIndex].getX();
-			int y1 = tiles[tileIndex].getY();
 			//Realign tiles to fix rotation error
-			tileSet.setGroup(tileIndex);
-			boolean boundsSet=false;
-			for(int i=tileSet.getNext(); i>=0; i=tileSet.getNext())
-			{
-				int x2 = tiles[i].getX();
-				int y2 = tiles[i].getY();
-				int dX = (x2 - x1 + (x2>x1 ? 1 : -1)*tileSpacingX/2)/tileSpacingX;
-				int dY = (y2 - y1 + (y2>y1 ? 1 : -1)*tileSpacingY/2)/tileSpacingY;
-				tiles[i].moveTo(x1 + dX*tileSpacingX,y1 + dY*tileSpacingY);
-			}
+			realignConnectedTiles(tileIndex, tileSet);
+
 			initTileImages(tileIndex,tileSet);
 			dragBounds=getConnectedBounds(tileIndex,tileSet,dragBounds);
 			dragAllowance=getDragAllowance(tileIndex,tileSet,dragBounds,dragAllowance);
@@ -1211,6 +1202,26 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 		for(int i=tileSet.getNext(); i>=0; i=tileSet.getNext())
 		{
 			tiles[i].moveTo(tiles[i].getX() + dX, tiles[i].getY() + dY);
+		}
+	}
+	
+	/**
+	 * Fixes rotation or scaling errors in a connected set of tiles.
+	 * @param tileIndex Index of one of the tiles in the set.
+	 * @param tileSet The connected set to operate on.
+	 */
+	private void realignConnectedTiles(int tileIndex, ConnectedSet tileSet)
+	{
+		int x1 = tiles[tileIndex].getX();
+		int y1 = tiles[tileIndex].getY();
+		tileSet.setGroup(tileIndex);
+		for(int i=tileSet.getNext(); i>=0; i=tileSet.getNext())
+		{
+			int x2 = tiles[i].getX();
+			int y2 = tiles[i].getY();
+			int dX = (x2 - x1 + (x2>x1 ? 1 : -1)*tileSpacingX/2)/tileSpacingX;
+			int dY = (y2 - y1 + (y2>y1 ? 1 : -1)*tileSpacingY/2)/tileSpacingY;
+			tiles[i].moveTo(x1 + dX*tileSpacingX,y1 + dY*tileSpacingY);
 		}
 	}
 	
@@ -1308,28 +1319,40 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 		boolean result=true;
 		//This is for PuzzleHandler.load to identify puzzle type
 		out.println("JigsawHandler");
+		int [][] data = {{boardBounds.width},{boardBounds.height}};
+		String [] names = {"width","height"};
 
-		//Save the TileManager
-		if(tileManager instanceof SquareJigsawManager)
-		{
-			out.println("SquareJigsawManager");
-			result = ((SquareJigsawManager)tileManager).save(out,err);
-		}
-		else if(tileManager instanceof HexJigsawManager)
-		{
-			out.println("HexJigsawManager");
-			result = ((HexJigsawManager)tileManager).save(out,err);
-		}
-		else result = false;
+		result=new ArrayWriter(2,1,"boardBounds").save(data,names,out,err);
 
 		if(result)
 		{
-			int [][] data = new int[5][];
+			//Save the TileManager
+			if(tileManager instanceof SquareJigsawManager)
+			{
+				out.println("SquareJigsawManager");
+				result = ((SquareJigsawManager)tileManager).save(out,err);
+			}
+			else if(tileManager instanceof HexJigsawManager)
+			{
+				out.println("HexJigsawManager");
+				result = ((HexJigsawManager)tileManager).save(out,err);
+			}
+			else
+			{
+				//Should never happen
+				out.println("Unknown TileManager type.");
+				result = false;
+			}
+		}
+		
+		if(result)
+		{
+			data = new int[5][];
 			for(int i=0; i<3; i++)
 			{
 				data[i]=new int[tiles.length];
 			}
-			String [] names = {"x","y","rotation","layer","zIndex"};
+			String [] ns = {"x","y","rotation","layer","zIndex"};
 			for(int i=0; i<tiles.length; i++)
 			{
 				data[0][i]=tiles[i].getX();
@@ -1338,7 +1361,7 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 			}
 			data[3]=layerIndices;
 			data[4]=zIndices;
-			result = new ArrayWriter(5,tiles.length,"JigsawHandler").save(data,names,out,err);
+			result = new ArrayWriter(5,tiles.length,"JigsawHandler").save(data,ns,out,err);
 		}
 
 		//Save connected sets
@@ -1386,38 +1409,56 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 	{
 		JigsawHandler result=null;
 		ArrayReader reader=null;
-		Dimension boardSize=boardCanvas.getSize();
-		
-		//Default scale factor - This will be used if the puzzle is saved, then loaded at a different screen resolution.
-		double scaleFactor=1.0;
+		Dimension imageSize=boardCanvas.getImageSize(null);
+		Rectangle boardBounds=boardCanvas.getBounds(null);
+		Dimension oldBoardBounds=null;
+		reader=new ArrayReader("boardBounds");
+		if(reader.load(in,err))
+		{
+			int width=0;
+			int [] values=reader.getColumn("width",err);
+			if(values!=null)
+			{
+				width=values[0];
+				values=reader.getColumn("height",err);
+				if(values!=null)
+				{
+					oldBoardBounds=new Dimension(width,values[0]);
+				}
+			}
+		}
 
 		TileManager tileManager=null;
 		String managerType=null;
-		try
-		{
-			managerType=in.readLine();
-			if(managerType==null)
-			{
-				err.println("JigsawHandler.load(): Unexpected end of file.");
-			}
-		}
-		catch(IOException ex)
-		{
-			managerType=null;
-			err.println("JigsawHandler.load(): " + ex.getMessage());
-		}
 		
-		if("HexJigsawManager".equals(managerType))
+		if(oldBoardBounds!=null)
 		{
-			tileManager=HexJigsawManager.load(in,err,boardSize);
-		}
-		else if("SquareJigsawManager".equals(managerType))
-		{
-			tileManager=SquareJigsawManager.load(in,err,boardSize);
-		}
-		else
-		{
-			err.println("Tile shape unknown or missing.");
+			try
+			{
+				managerType=in.readLine();
+				if(managerType==null)
+				{
+					err.println("JigsawHandler.load(): Unexpected end of file.");
+				}
+			}
+			catch(IOException ex)
+			{
+				managerType=null;
+				err.println("JigsawHandler.load(): " + ex.getMessage());
+			}
+			
+			if("HexJigsawManager".equals(managerType))
+			{
+				tileManager=HexJigsawManager.load(in,err,imageSize);
+			}
+			else if("SquareJigsawManager".equals(managerType))
+			{
+				tileManager=SquareJigsawManager.load(in,err,imageSize);
+			}
+			else
+			{
+				err.println("Tile shape unknown or missing.");
+			}
 		}
 		
 		if(tileManager!=null)
@@ -1476,15 +1517,12 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 			
 			if(result != null)
 			{
-//todo scale x and y here (if necessary) to fit scaled tile sizes - this has to happen when scaling is implemented for JigsawManagers
-// - Find upper, lower, left, and right bounds of each connected set
-// - Scale the center point
 				for(int i=0; i<result.tiles.length; i++)
 				{
 					//Set up tiles
 					result.tiles[i]=new MouseSensetiveTile(tileManager, i,
-						x[i], //x
-						y[i], //y
+						x[i]*boardBounds.width/oldBoardBounds.width, //x - scaled
+						y[i]*boardBounds.height/oldBoardBounds.height, //y - scaled
 						-1, //z-index is reverse indexed, it will be handled later
 						result.errMargin);
 					tileManager.rotate(i,TileManager.SPIN_CW*rotation[i]); //rotation
@@ -1510,7 +1548,29 @@ public class JigsawHandler extends PuzzleHandler implements MouseSensetiveShapeL
 				result=null;
 			}
 		}
-//todo clean up connected set scaling errors here (if scaling is necessary)
+		
+		if(result!=null)
+		{
+			//Adjust connected set scaling errors.
+			boolean [] processed = new boolean[result.tiles.length];
+			for(int i=0; i<result.tiles.length; i++)
+			{
+				processed[i]=false;
+			}
+			for(int i=0; i<result.tiles.length; i++)
+			{
+				if(!processed[i])
+				{
+					result.realignConnectedTiles(i,result.connectedTiles);
+					processed[i]=true;
+					result.connectedTiles.setGroup(i);
+					for(int j=result.connectedTiles.getNext(); j>=0; j=result.connectedTiles.getNext())
+					{
+						processed[j]=true;
+					}
+				}
+			}
+		}
 
 		if(result!=null)
 		{

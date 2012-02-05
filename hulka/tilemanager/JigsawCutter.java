@@ -1,4 +1,5 @@
-/**   Copyright (C) 2011 Jonathan Hulka (jon.hulka@gmail.com)
+/**
+ *   Copyright (C) 2011, 2012 Jonathan Hulka (jon.hulka@gmail.com)
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,6 +17,9 @@
 
 /**
  * Changelog:
+ * 
+ * 2012 02 02 - Jon
+ *  - Implemented scaling when loading a puzzle on a different screen resolution.
  * 
  * 2011 12 19 - Jon
  *  - Finished implementing save and load functions
@@ -79,9 +83,9 @@ public abstract class JigsawCutter
 	 * @param descriptor
 	 * @param rotationOffset rotation required to bring the first 'top' edge into a horizontal position.
 	 * @param maskPoints corner points for the tile's mask, one for each corner
-	 * @param cornerTileOffset array of points (one value for each corner), indicating x,y offset to the tile that 'owns' the indexed corner
+	 * @param cornerTileOffset array of points (one value for each corner), indicating x,y tile position offset to the tile that 'owns' the indexed corner
 	 * @param cornerIndexOffset used as the first index to the two-dimensional arrays cornerOffsetX and cornerOffsetY (redundant for square tiles, since the index will always be 0)
-	 * @param edgeTileOffset, array of points (one value for each side), indicating x,y offset to the tile that 'owns' the indexed side
+	 * @param edgeTileOffset, array of points (one value for each side), indicating x,y tile position offset to the tile that 'owns' the indexed side
 	 * Only tiles with an even number of sides are considered here (square and hex specifically), so the assumption is that each tile 'owns' its first sideCount/2 tiles and 'borrows' the remaining from its neighbors.
 	 * The 'borrowed' side opposite a tile's 'owned' side is found by adding sideCount/2 to the side's index.
 	 */
@@ -150,24 +154,7 @@ public abstract class JigsawCutter
 		this.bubbleDirection=bubbleDirection;
 		this.controlPointOffset=controlPointOffset;
 	}
-/**	
-	private boolean saveDataItem(PrintWriter out, int [][] item, String name)
-	{
-		boolean result=true;
-		int len0=item.length;
-		out.println(name+":"+len0);
-		for(int i=0; i<len0; i++)
-		{
-			int len1=item[i].length;
-			out.println(name+":"+i+":"+len1);
-			for(int j=0; j<len1; j++)
-			{
-				out.print(item[i][j]+":");
-			}
-		}
-		return result;
-	}
-**/
+
 	public boolean save(PrintWriter out, PrintWriter err)
 	{
 		int sideIndexCount=bubbleSize.length;
@@ -202,7 +189,16 @@ public abstract class JigsawCutter
 		return new ArrayWriter(names.length,bubbleSize[0].length,"JigsawCutter").save(values,names,out,err);
 	}
 
-	public boolean load(BufferedReader in, PrintWriter err)
+	/**
+	 * @param in
+	 * @param err error stream
+	 * @param fromWidth original tile width
+	 * @param fromHeight original tile height
+	 * @param toWidth new tile width
+	 * @param toHeight new tile height
+	 * @return Status of the load operation, true for success, false if an error was encountered.
+	 */
+	public boolean load(BufferedReader in, PrintWriter err, int fromWidth, int fromHeight, int toWidth, int toHeight)
 	{
 		//This is the only load function that doesn't create an instance.
 		//JigsawCutter is abstract, so the specific instance must be created by the calling class.
@@ -262,6 +258,34 @@ public abstract class JigsawCutter
 				result=bubbleSize[i]!=null && bubbleDirection[i]!=null && controlPointOffset[i]!=null;
 			}
 		}
+
+		//Scale the loaded data if necessary
+		if(result && toWidth!=fromWidth)
+		{
+			for(int i=0; i<cornerIndexCount; i++)
+			{
+				for(int j=0; j<cornerOffsetX[i].length; j++)
+				{
+					cornerOffsetX[i][j]=cornerOffsetX[i][j]*toWidth/fromWidth;
+				}
+				for(int j=0; j<cornerOffsetY[i].length; j++)
+				{
+					cornerOffsetY[i][j]=cornerOffsetY[i][j]*toHeight/fromHeight;
+				}
+			}
+			for(int i=0; i<sideIndexCount; i++)
+			{
+				for(int j=0; j<bubbleSize[i].length; j++)
+				{
+					bubbleSize[i][j]=bubbleSize[i][j]*toWidth/fromWidth;
+				}
+				for(int j=0; j<controlPointOffset[i].length; j++)
+				{
+					controlPointOffset[i][j]=controlPointOffset[i][j]*toWidth/fromWidth;
+				}
+			}
+		}
+
 		return result;
 	}
 
@@ -364,13 +388,14 @@ public abstract class JigsawCutter
 	private void buildEdge(Point2D.Double [] corners, Point2D.Double [] controls, int index, double x1, double y1, double x2, double y2, double cp, double bubbleSize, double bubbleDirection)
 	{
 		//The edge is assumed to be horizontal - getTileMask handles the rotation
-		//       _
-		//______\ /_______
+
+		//______( )_______
 		//
 		// or
 		//______   _______
-		//      /_\
-		//
+		//      (_)
+
+		//Left to right or right to left
 		double direction = x2 - x1 > 0 ? 1 : -1;
 		double midY = (y1 + y2)/2.0;
 		//Base control point for bubble

@@ -1,5 +1,5 @@
 /**
- *   Copyright (C) 2010, 2011 Jonathan Hulka (jon.hulka@gmail.com)
+ *   Copyright (C) 2010 - 2012 Jonathan Hulka (jon.hulka@gmail.com)
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -17,6 +17,9 @@
 
 /**
  * Changelog:
+ * 
+ * 2012 02 02 - Jon
+ *  - Implemented scaling when loading a puzzle on a different screen resolution.
  * 
  * 2011 12 19 - Jon
  *  - Finished implementing save and load functions
@@ -83,27 +86,9 @@ public class HexJigsawManager extends HexTileManager
 	//Temporary storage to avoid excessive heap usage
 	private Point tempIndex=new Point();
 
-	/**
-	 * This constructor is used for minimal setup when data is being loaded rather than generated.
-	 */
-	private HexJigsawManager(TileSetDescriptor descriptor)
-	{
-		super(descriptor);
-		initCutter();
-
-		//Since AbstractTileManagerImpl's constructor will not be called:
-		rotationStep=2.0*Math.PI/((double)descriptor.rotationSteps);
-		originalIndex=new int[descriptor.tileCount];
-		rotation = new int[descriptor.tileCount];
-		for(int i=0; i<descriptor.tileCount; i++)
-		{
-			originalIndex[i]=i;
-			rotation[i]=0;
-		}
-	}
-
 	public HexJigsawManager(int width, int height, int tilesAcross, int tilesDown)
 	{
+		//This will trigger initTileSetDescriptor
 		super(width,height,tilesAcross,tilesDown,true);
 		initCutter();
 
@@ -390,27 +375,78 @@ public class HexJigsawManager extends HexTileManager
 		if(result) result=cutter.save(out,err);
 		return result;
 	}
+
+	/**
+	 * The 'scaling' constructor.
+	 */
+	protected HexJigsawManager(TileSetDescriptor oldDescriptor, int boardWidth, int boardHeight)
+	{
+		super(oldDescriptor,boardWidth,boardHeight);
+	}
 	
 	public static HexJigsawManager load(BufferedReader in, PrintWriter err,Dimension boardSize)
 	{
 		HexJigsawManager result=null;
-		TileSetDescriptor descriptor=TileSetDescriptor.load(in,err);
-		if(descriptor.boardWidth>boardSize.width || descriptor.boardHeight>boardSize.height)
+		TileSetDescriptor oldDescriptor=TileSetDescriptor.load(in,err);
+		if(oldDescriptor!=null)
 		{
-			//For now - not allowing the display area to change
-			err.println("You have changed your screen settings.\nAt this time, puzzles cannot be loaded at a lower screen resolution than they were saved at.\nA puzzle scaling feature is currently under development.");
-			descriptor=null;
-		}
-//Todo scale to fit here - it might make most sense to give descriptor the new size and let it figure out the scaling
-		if(descriptor!=null)
-		{
-			result=new HexJigsawManager(descriptor);
-			if(!result.cutter.load(in,err))
+			//Use the 'scaling' constructor
+			result=new HexJigsawManager(oldDescriptor, boardSize.width, boardSize.height);
+			result.initCutter();
+			if(!result.cutter.load(in,err,oldDescriptor.tileWidth,oldDescriptor.tileHeight,result.descriptor.tileWidth,result.descriptor.tileHeight))
 			{
 				result=null;
 			}
 		}
-//todo scale the cutter here - probably implement a scale function via descriptor
 		return result;
+	}
+
+	/**
+	 * This is specific to loading
+	 * @param oldDescriptor The 'saved' {@link TileSetDescriptor}.
+	 * @param newDescriptor The {@link TileSetDescriptor} to be initialized.
+	 */
+	public TileSetDescriptor adjustTileSetDescriptor(TileSetDescriptor oldDescriptor, int boardWidth, int boardHeight)
+	{
+		if(boardWidth!=oldDescriptor.boardWidth||boardHeight!=oldDescriptor.boardHeight)
+		{
+			//Board size has changed - create a new descriptor to reflect the changes
+			descriptor = new TileSetDescriptor();
+			descriptor.boardWidth=boardWidth;
+			descriptor.boardHeight=boardHeight;
+			descriptor.tilesAcross=oldDescriptor.tilesAcross;
+			descriptor.tilesDown=oldDescriptor.tilesDown;
+			descriptor.fitEdgeTiles=oldDescriptor.fitEdgeTiles;
+			descriptor.tileCount=oldDescriptor.tileCount;
+			descriptor.rotationSteps=oldDescriptor.rotationSteps;
+			descriptor.sideCount=oldDescriptor.sideCount;
+			descriptor.heightWidthRatio=oldDescriptor.heightWidthRatio;
+			//Best width
+			int tW=oldDescriptor.tileWidth*descriptor.boardWidth/oldDescriptor.boardWidth;
+			//Best height;
+			int tH=oldDescriptor.tileHeight*descriptor.boardHeight/oldDescriptor.boardHeight;
+			//Use the smallest tile size
+			int tW2=(int)(tH*sqrt3/2);
+			if(tW2<tW)
+			{
+				tW=tW2;
+				tH=(int)(2*tW/sqrt3);
+			}
+			//Make tH an integral multiple of 4, to ensure accuracy calculating spacing
+			tH-=tH%4;
+			//Make tW an integral multiple of 2, to ensure accuracy caclulating spacing
+			tW-=tW%2;
+			descriptor.tileHeight=tH;
+			descriptor.tileWidth=tW;
+			descriptor.tileSpacingX=tW/2;
+			descriptor.tileSpacingY=tH*3/4;
+			//This will degrade if a puzzle is repeatedly saved and loaded at different resolutions
+			descriptor.tileMargin=(int)(oldDescriptor.tileMargin*tW/((int)((float)oldDescriptor.tileWidth+0.5)));
+		}
+		else
+		{
+			descriptor=oldDescriptor;
+		}
+		return descriptor;
 	}
 }
