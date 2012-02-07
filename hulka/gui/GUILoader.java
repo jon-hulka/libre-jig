@@ -30,6 +30,7 @@ import hulka.xml.SimpleXMLReader;
 import hulka.xml.SimpleXMLToken;
 import java.util.HashMap;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.awt.image.BufferedImage;
 import javax.swing.JFrame;
@@ -193,7 +194,8 @@ public class GUILoader
 
 		try
 		{
-			reader = new SimpleXMLReader(new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream(guiDef)));
+			reader = new SimpleXMLReader(new InputStreamReader(MiscUtils.translateURL(guiDef).openStream()));
+//			reader = new SimpleXMLReader(new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream(guiDef)));
 		}
 		catch(Exception ex)
 		{
@@ -542,7 +544,7 @@ public class GUILoader
 			{
 				try
 				{
-					dialog = new HTMLDialog(frame,appName, Thread.currentThread().getContextClassLoader().getResource(path));
+					dialog = new HTMLDialog(frame,appName,MiscUtils.translateURL(path));
 					documentDialogs.put(name,dialog);
 				}
 				catch(Exception ex)

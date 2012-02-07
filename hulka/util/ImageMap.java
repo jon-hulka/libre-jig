@@ -26,6 +26,7 @@
 
 
 package hulka.util;
+import hulka.util.MiscUtils;
 import hulka.xml.SimpleXMLReader;
 import hulka.xml.SimpleXMLToken;
 //import java.io.File;
@@ -60,7 +61,9 @@ public class ImageMap
 	 */
 	public ImageMap(String path, int initialCapacity)
 	{
-		InputStreamReader isReader=new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream(path));
+//		InputStreamReader isReader=new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream(path));
+		InputStreamReader isReader=null;
+		try{isReader=new InputStreamReader(MiscUtils.translateURL(path).openStream()); }catch(Exception ex){ex.printStackTrace();}
 		SimpleXMLReader reader = new SimpleXMLReader(isReader);
 
 		thumbPaths = new ArrayList<String>(initialCapacity);

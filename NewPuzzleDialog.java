@@ -318,7 +318,7 @@ public class NewPuzzleDialog extends JDialog implements ActionListener
 		previewPane.setVisible(false);
 		try
 		{
-			URL url = Thread.currentThread().getContextClassLoader().getResource(imageMap.getImagePath(index));
+			URL url = MiscUtils.translateURL(imageMap.getImagePath(index));
 			meanColor=imageMap.getMeanColor(index);
 			if(!loadImage(url))
 			{

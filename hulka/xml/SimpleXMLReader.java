@@ -16,6 +16,11 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * Changlelog:
+ * 2012 02 06 - Jon
+ *  - Fixed a bug that caused delimiters to be truncated and missed between buffer reads.
+ */
 package hulka.xml;
 import java.io.InputStreamReader;
 import java.util.Stack;
@@ -449,6 +454,9 @@ public class SimpleXMLReader
 	private boolean readToken(String [] delimiters, boolean allowEOF)
 	{
 		boolean result = false;
+		//This many characters will be left in the buffer to prevent truncating delimiters.
+		//The value should be larger than any possible delimiter.
+		int padLength=5;
 		tokenValue="";
 		do
 		{
@@ -469,8 +477,18 @@ public class SimpleXMLReader
 			//Append buffer data to token value
 			if(offset==-1)
 			{
-				tokenValue += buffer;
-				buffer.delete(0,buffer.length());
+				if(eof)
+				{
+					//Use up the buffer, if necessary
+					tokenValue += buffer;
+					buffer.delete(0,buffer.length());
+				}
+				else if(buffer.length()>=padLength)
+				{
+					//Leave some in the buffer to prevent truncating delimiters
+					tokenValue+=buffer.substring(0,buffer.length()-padLength);
+					buffer.delete(0,buffer.length()-padLength);
+				}
 			}
 			else
 			{

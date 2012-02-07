@@ -26,6 +26,7 @@ public class MiscUtils
 	/**
 	 * Loads an image without having to worry about exceptions.
 	 * If the image won't load, a blank one is created.
+	 * @param path image path
 	 * @param expectedWidth width to make the blank image, if necessary.
 	 * @param expectedHeight height to make the blank image, if necessary.
 	 * @return the image
@@ -35,7 +36,7 @@ public class MiscUtils
 		BufferedImage image = null;
 		try
 		{
-			URL url = Thread.currentThread().getContextClassLoader().getResource(path);
+			URL url = translateURL(path);
 			image = ImageIO.read(url);
 		}
 		catch(Exception ex)
@@ -76,6 +77,28 @@ public class MiscUtils
 				result=imageChooser.getSelectedFile().toURI().toURL();
 			}catch(Exception ex){ex.printStackTrace();}
 		}
+		return result;
+	}
+	
+	/**
+	 * Determines whether a path is absolute or relative and translates it to a URL accordingly.
+	 */
+	public static URL translateURL(String path)
+	{
+		URL result=null;
+		try
+		{
+			//Still needs a bit of tweaking to make it work on Windows
+			if("/".equals(path.substring(0,1)))
+			{
+				result=new URL("file:"+path);
+			}
+			else
+			{
+				//This works in or out of jar files
+				result=Thread.currentThread().getContextClassLoader().getResource(path);
+			}
+		}catch(Exception ex){ex.printStackTrace();}
 		return result;
 	}
 }

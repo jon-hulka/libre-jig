@@ -66,9 +66,7 @@ class GUI
 	JScrollPane boardPane=null;
 	PuzzleCanvas boardCanvas=null;
 	JFrame frame=null;
-//2011 03 18	NewPuzzleDialog newDialog=null;
 	PuzzleLoader puzzleLoader=null;
-//2011 03 18	PuzzleHandler puzzleHandler=null;
 	GUILoader guiLoader=null;
 	
 	public static void main(String [] args)
@@ -92,7 +90,7 @@ class GUI
 		else
 		{
 			JOptionPane.showMessageDialog(null,
-				"You must have Java version 1.6 to run this program.\nYour version is " + version.getMajor() + "." + version.getMinor() + ".\nPlease upgrade at www.java.com",
+				"You must have Java version 1.6 to run this program.\nYour version is " + version.getMajor() + "." + version.getMinor() + ".",
 				"Invalid JVM version", JOptionPane.ERROR_MESSAGE);
 		}
 	}
@@ -129,7 +127,6 @@ class GUI
 			
 			frame.pack();
 			frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-//			guiLoader.getMenuItem("load").setEnabled(false);
 			guiLoader.getMenuItem("save").setEnabled(false);
 			guiLoader.getMenuItem("preview").setEnabled(false);
 			guiLoader.getMenuItem("color").setEnabled(false);
@@ -172,8 +169,7 @@ class GUI
 		boardSize=new Dimension(area.width,area.height);
 		boardCanvas=new PuzzleCanvas(boardSize);
 		boardPane.setViewportView(boardCanvas);
-		//Credits screen seems a bit much
-//		guiLoader.showDocument("credits");
+//This might be a bit annoying.		guiLoader.showDocument("credits");
 		startGame();
 	}
 	

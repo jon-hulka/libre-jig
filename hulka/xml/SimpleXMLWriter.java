@@ -1,5 +1,4 @@
 /**
- * To do: search "To do" and do everything therein specified
  * This code module may be freely used and modified without restriction.
  *  - Jonathan Hulka (jon.hulka@gmail.com)
  * 
@@ -21,6 +20,7 @@
 
 package hulka.xml;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Stack;
 public class SimpleXMLWriter
 {

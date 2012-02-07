@@ -16,6 +16,7 @@
  */
 
 package hulka.gui;
+import hulka.util.MiscUtils;
 import javax.swing.*;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
@@ -29,7 +30,7 @@ public class HTMLDialog extends JDialog
 	public HTMLDialog(JFrame owner, String title, URL page)
 	{
 		super(owner,title,true);
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+//		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		JPanel contentPane = (JPanel)getContentPane();
 
 		GridBagLayout layout = new GridBagLayout();
