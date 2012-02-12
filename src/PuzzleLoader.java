@@ -69,7 +69,7 @@ public class PuzzleLoader
 	private PuzzleLoader(){}
 	public PuzzleLoader(GUI gui) throws FileNotFoundException, URISyntaxException
 	{
-		newDialog=new NewPuzzleDialog(gui.getFrame());
+		newDialog=new NewPuzzleDialog(gui.getFrame(),gui.getFolderPath("data"));
 		this.gui=gui;
 	}
 

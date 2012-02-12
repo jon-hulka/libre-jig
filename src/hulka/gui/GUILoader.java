@@ -131,6 +131,7 @@ public class GUILoader
 	private boolean guiLoaded=false;
 	private String appVersion=null;
 
+	private HashMap<String,String> folderPaths;
 	private HashMap<String,String> documentPaths;
 	private HashMap<String,HTMLDialog> documentDialogs;
 	private HashMap<String,JMenuItem> menuItems;
@@ -151,6 +152,7 @@ public class GUILoader
 	{
 		actionCoordinator=new ActionCoordinator(this);
 		guiDef=guiDefinitionPath;
+		folderPaths = new HashMap<String,String>();
 		documentPaths = new HashMap<String,String>();
 		documentDialogs = new HashMap<String,HTMLDialog>();
 		menuItems = new HashMap<String,JMenuItem>();
@@ -229,6 +231,7 @@ public class GUILoader
 			if( ok &&token.type==SimpleXMLToken.TYPE_ELEMENT_START)
 			{
 				if(token.value.equals("application")){ok=parseAppSettings();}
+				else if(token.value.equals("folder")){ok=parseFolder();}
 				else if(token.value.equals("document")){ok=parseDocument();}
 				else if(token.value.equals("menubar")){ok=parseMenuBar();}
 				else ok=clearElement();//get past unknown elements
@@ -367,7 +370,7 @@ public class GUILoader
 		return ok;
 	}
 	
-	private boolean parseDocument()
+	private boolean parseFolder()
 	{
 		boolean ok=true;
 		String name=null;
@@ -394,13 +397,69 @@ public class GUILoader
 		}while(ok && token.type!=SimpleXMLToken.TYPE_ELEMENT_END);
 		token.type=SimpleXMLToken.TYPE_NONE;
 		
-		if(name!=null && path!=null)
+		if(ok)
 		{
-			documentPaths.put(name,path);
+			if(name!=null && path!=null)
+			{
+				folderPaths.put(name,path);
+			}
+			else
+			{
+				showError("Parsing folder definition", "Folder definition missing name or path");
+			}
 		}
-		else
+		
+		return ok;
+	}
+	
+	private boolean parseDocument()
+	{
+		boolean ok=true;
+		String name=null;
+		String path=null;
+		String folder=null;
+		do
 		{
-			showError("Parsing document definition", "Document definition missing name or path");
+			ok=parseToken();
+			if(ok && token.type==SimpleXMLToken.TYPE_ELEMENT_START)
+			{
+				String elementName=token.value;
+				ok=extractElementValue();
+				if(ok)
+				{
+					if(elementName.equals("name"))
+					{
+						name=token.value;
+					}
+					else if(elementName.equals("folder"))
+					{
+						folder=folderPaths.get(token.value);
+						if(folder==null)
+						{
+							ok=false;
+							showError("Parsing document definition","Unknown folder");
+						}
+					}
+					else if(elementName.equals("path"))
+					{
+						path=token.value;
+					}
+				}
+			}
+		}while(ok && token.type!=SimpleXMLToken.TYPE_ELEMENT_END);
+		token.type=SimpleXMLToken.TYPE_NONE;
+		
+		if(ok)
+		{
+			if(name!=null && path!=null)
+			{
+				if(folder!=null) path=folder+"/"+path;
+				documentPaths.put(name,path);
+			}
+			else
+			{
+				showError("Parsing document definition", "Document definition missing name or path");
+			}
 		}
 		
 		return ok;
@@ -607,5 +666,10 @@ public class GUILoader
 	public String getAppVersion()
 	{
 		return appVersion;
+	}
+	
+	public String getFolderPath(String name)
+	{
+		return folderPaths.get(name);
 	}
 }

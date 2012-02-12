@@ -224,4 +224,9 @@ class GUI
 	{
 		return guiLoader.getAppVersion();
 	}
+	
+	public String getFolderPath(String name)
+	{
+		return guiLoader.getFolderPath(name);
+	}
 }

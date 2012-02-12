@@ -131,12 +131,17 @@ public class NewPuzzleDialog extends JDialog implements ActionListener
 	private JButton okButton=null;
 	//Only to be used by actionPerformed
 	private boolean actionsEnabled=true;
+	
+	private String picsDir;
+	private String dataDir;
 
 	private NewPuzzleDialog(){}
-	public NewPuzzleDialog(JFrame owner) throws FileNotFoundException, URISyntaxException
+	public NewPuzzleDialog(JFrame owner,String dataDir) throws FileNotFoundException, URISyntaxException
 	{
 		super(owner, TITLE, true);
-		imageMap = new ImageMap(IMAGELIST_CONFIG,10);
+		this.dataDir=dataDir + "/";
+		picsDir=dataDir+"/pics/";
+		imageMap = new ImageMap(this.picsDir+IMAGELIST_CONFIG,10,this.picsDir);
 		buildComponents();
 		pack();
 		setResizable(false);
@@ -235,7 +240,7 @@ public class NewPuzzleDialog extends JDialog implements ActionListener
 		BufferedImage [] images = new BufferedImage[paths.length];
 		for(int i=0; i<paths.length; i++)
 		{
-			images[i]=MiscUtils.loadImage(paths[i],THUMB_SIZE,THUMB_SIZE);
+			images[i]=MiscUtils.loadImage(dataDir+paths[i],THUMB_SIZE,THUMB_SIZE);
 		}
 		return images;
 	}
@@ -243,7 +248,7 @@ public class NewPuzzleDialog extends JDialog implements ActionListener
 	private JSimpleImageCombo getShapeComboBox()
 	{
 		BufferedImage [] images = loadImages(SHAPELIST);
-		BufferedImage img = MiscUtils.loadImage(SHAPELIST_NULL,THUMB_SIZE,THUMB_SIZE);
+		BufferedImage img = MiscUtils.loadImage(dataDir+SHAPELIST_NULL,THUMB_SIZE,THUMB_SIZE);
 		JSimpleImageCombo comboBox = new JSimpleImageCombo(images, img);
 		return comboBox;
 	}
@@ -251,7 +256,7 @@ public class NewPuzzleDialog extends JDialog implements ActionListener
 	private JSimpleImageCombo getPuzzleComboBox()
 	{
 		BufferedImage [] images = loadImages(PUZZLIST);
-		BufferedImage img = MiscUtils.loadImage(PUZZLIST_NULL,THUMB_SIZE,THUMB_SIZE);
+		BufferedImage img = MiscUtils.loadImage(dataDir+PUZZLIST_NULL,THUMB_SIZE,THUMB_SIZE);
 		JSimpleImageCombo comboBox = new JSimpleImageCombo(images, img);
 		return comboBox;
 	}
@@ -263,8 +268,8 @@ public class NewPuzzleDialog extends JDialog implements ActionListener
 		{
 			images[i]=MiscUtils.loadImage(imageMap.getThumbPath(i),THUMB_SIZE,THUMB_SIZE);
 		}
-		images[images.length-1]=MiscUtils.loadImage(IMAGELIST_OTHER,THUMB_SIZE,THUMB_SIZE);
-		BufferedImage img=MiscUtils.loadImage(IMAGELIST_NULL,THUMB_SIZE,THUMB_SIZE);
+		images[images.length-1]=MiscUtils.loadImage(dataDir+IMAGELIST_OTHER,THUMB_SIZE,THUMB_SIZE);
+		BufferedImage img=MiscUtils.loadImage(dataDir+IMAGELIST_NULL,THUMB_SIZE,THUMB_SIZE);
 		JSimpleImageCombo comboBox=new JSimpleImageCombo(images, img);
 		return comboBox;
 	}

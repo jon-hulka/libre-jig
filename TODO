@@ -1,3 +1,15 @@
+docs ending up in wrong directory - usr/share/doc/libre-jigsaw/libre-jigsaw/
+docs logo too big
+menus
+icons
+fix javadoc
+fix lintian
+
+Pics path resolve relative to pics folder
+guiloader integrate folders concept - documents relative to folders
+build gui.xml and put in source directory
+
+
 Splash screen - put together a nice animated "Speed Duck" gif
 
 CLEAN UP MouseSensetiveTile - need to rethink MouseSensetiveShapeManager - simplify, simplify, simplify

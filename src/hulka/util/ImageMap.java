@@ -32,7 +32,7 @@ import hulka.xml.SimpleXMLToken;
 //import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-//import java.net.URL;
+import java.net.URL;
 //import java.io.FileNotFoundException;
 //import java.net.URISyntaxException;
 import java.awt.Color;
@@ -42,6 +42,7 @@ public class ImageMap
 	ArrayList <String> thumbPaths;
 	ArrayList <String> imagePaths;
 	ArrayList <Color> meanColors;
+	String picsDir;
 
 	/**
 	 * Reads an XML file from the specified path.
@@ -58,12 +59,18 @@ public class ImageMap
 	 * 1.1.3.2 One &lt;g&gt; (integer)<br />
 	 * 1.1.3.3 One &lt;b&gt; (integer)<br />
 	 * @param initialCapacity initial capacity of the ArrayLists used to hold keys and values. If the number of formats stored in the file is known, use it here.
+	 * @param picsDir images directory base, including the trailing "/"
 	 */
-	public ImageMap(String path, int initialCapacity)
+	public ImageMap(String path, int initialCapacity, String picsDir)
 	{
+		this.picsDir=picsDir;
 //		InputStreamReader isReader=new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream(path));
 		InputStreamReader isReader=null;
-		try{isReader=new InputStreamReader(MiscUtils.translateURL(path).openStream()); }catch(Exception ex){ex.printStackTrace();}
+		try
+		{
+			URL url=MiscUtils.translateURL(path);
+			isReader=new InputStreamReader(url.openStream());
+		}catch(Exception ex){ex.printStackTrace();}
 		SimpleXMLReader reader = new SimpleXMLReader(isReader);
 
 		thumbPaths = new ArrayList<String>(initialCapacity);
@@ -156,8 +163,8 @@ public class ImageMap
 							//Process the listing
 							if(imagePath!=null && thumbPath!=null)
 							{
-								imagePaths.add(imagePath);
-								thumbPaths.add(thumbPath);
+								imagePaths.add(picsDir+imagePath);
+								thumbPaths.add(picsDir+thumbPath);
 								meanColors.add(new Color(r,g,b));
 							}else System.err.println("Parsing image list: insufficient information");
 							imagePath=null;
