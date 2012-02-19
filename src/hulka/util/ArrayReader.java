@@ -46,7 +46,7 @@ public class ArrayReader
 	}
 
 	/**
-	 * @param columName column to search for.
+	 * @param columnName column to search for.
 	 * @param err error stream, null to ignore errors.
 	 * @return values from the searched column, null if the column was not found.
 	 */

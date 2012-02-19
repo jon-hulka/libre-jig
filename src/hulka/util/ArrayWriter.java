@@ -44,7 +44,7 @@ public class ArrayWriter
 	
 	/**
 	 * @param values output values ( int[xDimension][yDimension] )
-	 * @param names item names ( String[xDimension] )
+	 * @param xNames item names ( String[xDimension] )
 	 * @param out stream to write to.
 	 * @param err error reporting.
 	 * @return true on success, null on error.

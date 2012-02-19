@@ -203,7 +203,7 @@ public class SquareTileManager extends AbstractTileManagerImpl
 	 * @param height Board height
 	 * @param count Number of tiles to calculate for.
 	 * @param fitEdgeTiles This is here for consistency, it doesn't apply to square tiles.
-	 * @param d Storage for return parameters - if null a new {@link TileDescriptor} will be allocated.
+	 * @param d Storage for return parameters - if null a new {@link TileSetDescriptor} will be allocated.
 	 * @return A {@link TileSetDescriptor} with boardWidth set to width, boardHeight set to height, tilesAcross and tilesDown and tileCount set to their calculated values.
 	 * Note that the resulting tileCount may be larger than the input count value.
 	 */

@@ -167,7 +167,7 @@ class GUI
 			area=SwingUtilities.calculateInnerArea(boardPane,area);
 		}
 		boardSize=new Dimension(area.width,area.height);
-		boardCanvas=new PuzzleCanvas(boardSize);
+		boardCanvas=new PuzzleCanvas(boardSize,guiLoader.getFolderPath("gui-images"));
 		boardPane.setViewportView(boardCanvas);
 //This might be a bit annoying.		guiLoader.showDocument("credits");
 		startGame();

@@ -137,9 +137,8 @@ public abstract class AbstractTileManagerImpl implements TileManager
 	}
 	/**
 	 * Rotate a tile.
-	 * @param tileIndex the tiles to rotate
-	 * @param direction one of TileManager.SPIN_CW or TileManager.SPIN_CCW
-	 * @param steps the number of discrete steps to rotate
+	 * @param flatIndex the tile to rotate
+	 * @param direction one of TileManager.SPIN_CW or TileManager.SPIN_CCW (Can be multiplied)
 	 */
 
 	public void rotate(int flatIndex, int direction)

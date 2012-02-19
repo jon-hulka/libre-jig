@@ -19,6 +19,8 @@
 
 /**
  * Changelog:
+ * 2012 02 14 - Jon
+ *  - Fixed a bug: load wasn't returning false on error.
  * 
  * 2011 12 19 - Jon
  *  - Finished implementing save and load functions
@@ -610,7 +612,8 @@ public class NewPuzzleDialog extends JDialog implements ActionListener
 		}
 		if(result && !loadImage(url))
 		{
-			err.println("Error loading image");
+			result=false;
+			err.println("Error loading image.");
 		}
 		return result;
 	}

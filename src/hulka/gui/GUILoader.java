@@ -18,6 +18,8 @@
 /**
  * To do: the config file's InputStream should be closed.
  * Changelog:
+ * 18.02.2012 - Jon
+ * - Added support for multiple window icons. Hopefully this fixes the blurry alt-tab icon issue in Mint.
  * 2010 08 10 - Jon
  * - Modified loadReader to correctly load the config file from within jar files.
  * 2010 07 08 - Jon
@@ -42,6 +44,8 @@ import javax.swing.JOptionPane;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.KeyStroke;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * This class requires a gui definition file in xml format:<br><br>
@@ -51,7 +55,7 @@ import javax.swing.KeyStroke;
  * 1.2 zero or more &lt;document&gt; elements<br>
  * 1.3 optionally one &lt;menubar&gt; element.<br><br>
  * Contents of &lt;application&gt;:<br>
- * 1.1.1 optionally one &lt;icon&gt; (text - path to an image file)<br>
+ * 1.1.1 optionally one or two &lt;icon&gt; element(s)(text - path to an image file, the smaller one should be listed first)<br>
  * 1.1.2 optionally one &lt;name&gt; (text)<br>
  * 1.1.3 optionally one &lt;version&gt; (text)<br><br>
  * Contents of &lt;document&gt;:<br>
@@ -81,7 +85,7 @@ import javax.swing.KeyStroke;
  * function.<br>
  * 
  * Additional event sources can be connected by registering the
- * ActionCoordinator ( {@link getActionCoordinator()} ).<br>
+ * ActionCoordinator ( {@link #getActionCoordinator()} ).<br>
  * 
  * Here is an example of how this class can be used:<br>
  * <hr>
@@ -140,7 +144,7 @@ public class GUILoader
 	private HTMLDialog creditsDialog = null;
 	private HTMLDialog helpDialog = null;
 	private ActionCoordinator actionCoordinator;
-
+	private List<BufferedImage> icons = new ArrayList<BufferedImage>();
 
 	private GUILoader(){super();}
 	
@@ -481,7 +485,8 @@ public class GUILoader
 					{
 						try
 						{
-							frame.setIconImage(MiscUtils.loadImage(token.value,32,32));
+							icons.add(MiscUtils.loadImage(token.value,32,32));
+//							frame.setIconImage(MiscUtils.loadImage(token.value,32,32));
 						}
 						catch(Exception ex)
 						{
@@ -501,6 +506,10 @@ public class GUILoader
 			}
 		}while(ok && token.type!=SimpleXMLToken.TYPE_ELEMENT_END);
 		token.type=SimpleXMLToken.TYPE_NONE;
+		if(ok && icons.size()>0)
+		{
+			frame.setIconImages(icons);
+		}
 		return ok;
 	}
 	

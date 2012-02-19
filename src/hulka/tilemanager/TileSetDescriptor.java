@@ -34,74 +34,74 @@ import hulka.util.ArrayWriter;
 public class TileSetDescriptor implements Cloneable
 {
 	/**
-	 * Display area width - initialized by {@link AbstractTileManagerImpl#AbstractTileManagerImpl(int,int,int,int)}.
+	 * Display area width - initialized by {@link AbstractTileManagerImpl}'s constructor.
 	 */
 	public int boardWidth;
 	/**
-	 * Display area height - initialized by {@link AbstractTileManagerImpl#AbstractTileManagerImpl(int,int,int,int)}.
+	 * Display area height - initialized by {@link AbstractTileManagerImpl}'s constructor}.
 	 */
 	public int boardHeight;
 	/**
-	 * Column count - initialized by {@link AbstractTileManagerImpl#AbstractTileManagerImpl(int,int,int,int)}.
+	 * Column count - initialized by {@link AbstractTileManagerImpl}'s constructor.
 	 */
 	public int tilesAcross;
 	/**
-	 * Row count - initialized by {@link AbstractTileManagerImpl#AbstractTileManagerImpl(int,int,int,int)}.
+	 * Row count - initialized by {@link AbstractTileManagerImpl}'s constructor.
 	 */
 	public int tilesDown;
 	/**
-	 * Edge tile fitting - initialized by {@link AbstractTileManagerImpl#AbstractTileManagerImpl(int,int,int,int)}.
+	 * Edge tile fitting - initialized by {@link AbstractTileManagerImpl}'s constructor.
 	 * If this is true, edge tiles will be adjusted to fit board dimensions.
 	 */
 	public boolean fitEdgeTiles;
 	/**
-	 * Offset of leftmost column from the origin - initialized by {@link AbstractTileManagerImpl#AbstractTileManagerImpl(int,int,int,int)}.
+	 * Offset of leftmost column from the origin - initialized by {@link AbstractTileManagerImpl}'s constructor.
 	 */
 	public int leftOffset;
 	/**
-	 * Offset of the topmost row from the origin - initialized by {@link AbstractTileManagerImpl#AbstractTileManagerImpl(int,int,int,int)}.
+	 * Offset of the topmost row from the origin - initialized by {@link AbstractTileManagerImpl}'s constructor.
 	 */
 	public int topOffset;
 	/**
-	 * Scale factor required to adjust tile height to the ideal ratio ({@link#heightWidthRatio}) - initialized by {@link AbstractTileManagerImpl#AbstractTileManagerImpl(int,int,int,int)}.
+	 * Scale factor required to adjust tile height to the ideal ratio ({@link #heightWidthRatio}) - initialized by {@link AbstractTileManagerImpl}'s constructor.
 	 */
 	public double scaleFactor;
 	/**
-	 * Tile width - to be initialized by {@link AbstractTileManagerImpl#getTileSetDescriptor()}.
+	 * Tile width - to be initialized by {@link AbstractTileManagerImpl#initTileSetDescriptor(TileSetDescriptor)}.
 	 */
 	public int tileWidth;
 	/**
-	 * Tile height - to be initialized by {@link AbstractTileManagerImpl#getTileSetDescriptor()}.
+	 * Tile height - to be initialized by {@link AbstractTileManagerImpl#initTileSetDescriptor(TileSetDescriptor)}.
 	 */
 	public int tileHeight;
 	/**
-	 * Horizontal space required by a tile - to be initialized by {@link AbstractTileManagerImpl#getTileSetDescriptor()}.
+	 * Horizontal space required by a tile - to be initialized by {@link AbstractTileManagerImpl#initTileSetDescriptor(TileSetDescriptor)}.
 	 */
 	public int tileSpacingX;
 	/**
-	 * Vertical space required by a tile - to be initialized by {@link AbstractTileManagerImpl#getTileSetDescriptor()}.
+	 * Vertical space required by a tile - to be initialized by {@link AbstractTileManagerImpl#initTileSetDescriptor(TileSetDescriptor)}.
 	 */
 	public int tileSpacingY;
 	/**
-	 * Total number of tiles - to be initialized by {@link AbstractTileManagerImpl#getTileSetDescriptor()}.
+	 * Total number of tiles - to be initialized by {@link AbstractTileManagerImpl#initTileSetDescriptor(TileSetDescriptor)}.
 	 */
 	public int tileCount;
 	/**
-	 * The number of discrete rotations in 360 degrees - to be initialized by {@link AbstractTileManagerImpl#getTileSetDescriptor()}.
+	 * The number of discrete rotations in 360 degrees - to be initialized by {@link AbstractTileManagerImpl#initTileSetDescriptor(TileSetDescriptor)}.
 	 */
 	public int rotationSteps;
 	/**
-	 * The number of sides to a tile - to be initialized by {@link AbstractTileManagerImpl#getTileSetDescriptor()}.
+	 * The number of sides to a tile - to be initialized by {@link AbstractTileManagerImpl#initTileSetDescriptor(TileSetDescriptor)}.
 	 * If all tiles are oriented the same way, this should equal rotationSteps.
 	 */
 	public int sideCount;
 	/**
-	 * Ideal height:width ratio - to be initialized by {@link AbstractTileManagerImpl#getTileSetDescriptor()}.
+	 * Ideal height:width ratio - to be initialized by {@link AbstractTileManagerImpl#initTileSetDescriptor(TileSetDescriptor)}.
 	 * Scaled to this ratio, a uniform tile's sides should be equal in length.
 	 */
 	public double heightWidthRatio;
 	/**
-	 * Margin space needed for drawing - to be initialized by {@link AbstractTileManagerImpl#getTileSetDescriptor()}.
+	 * Margin space needed for drawing - to be initialized by {@link AbstractTileManagerImpl#initTileSetDescriptor(TileSetDescriptor)}.
 	 */
 	public int tileMargin;
 	

@@ -85,7 +85,7 @@ public abstract class JigsawCutter
 	 * @param maskPoints corner points for the tile's mask, one for each corner
 	 * @param cornerTileOffset array of points (one value for each corner), indicating x,y tile position offset to the tile that 'owns' the indexed corner
 	 * @param cornerIndexOffset used as the first index to the two-dimensional arrays cornerOffsetX and cornerOffsetY (redundant for square tiles, since the index will always be 0)
-	 * @param edgeTileOffset, array of points (one value for each side), indicating x,y tile position offset to the tile that 'owns' the indexed side
+	 * @param edgeTileOffset array of points (one value for each side), indicating x,y tile position offset to the tile that 'owns' the indexed side
 	 * Only tiles with an even number of sides are considered here (square and hex specifically), so the assumption is that each tile 'owns' its first sideCount/2 tiles and 'borrows' the remaining from its neighbors.
 	 * The 'borrowed' side opposite a tile's 'owned' side is found by adding sideCount/2 to the side's index.
 	 */
@@ -139,7 +139,7 @@ public abstract class JigsawCutter
 	 * @param cornerOffsetY corner offsets, as a two dimensional array; same index as cornerOffsetX
 	 * @param bubbleSize bubble sizes in pixels, as a two dimensional array; [number of sides 'owned' by each tile (2 for square, 3 for hex)] by [number of tiles (extended index)]
 	 * @param bubbleDirection bubble directions (-1 or 1), as a two dimensional array; same index as bubbleSize
-	 * @param controlPointOffset, bubble center control point offset; same index as bubbleSize
+	 * @param controlPointOffset bubble center control point offset; same index as bubbleSize
 	 */
 	public void setDrawingData(
 		int [][] cornerOffsetX,

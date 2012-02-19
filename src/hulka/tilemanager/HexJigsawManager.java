@@ -44,9 +44,6 @@ import java.awt.Dimension;
 import java.io.PrintWriter;
 import java.io.BufferedReader;
 
-/**
- * @todo look into using margins to get more flexibility around the edges - 12-piece puzzles aren't always using the whole image.
- */
 public class HexJigsawManager extends HexTileManager
 {
 	JigsawCutter cutter;
@@ -404,7 +401,9 @@ public class HexJigsawManager extends HexTileManager
 	/**
 	 * This is specific to loading
 	 * @param oldDescriptor The 'saved' {@link TileSetDescriptor}.
-	 * @param newDescriptor The {@link TileSetDescriptor} to be initialized.
+	 * @param boardWidth new boardWidth
+	 * @param boardHeight new boardHeight
+	 * @return adjusted {@link TileSetDescriptor}. If no adjustments are made, oldDescriptor is returned.
 	 */
 	public TileSetDescriptor adjustTileSetDescriptor(TileSetDescriptor oldDescriptor, int boardWidth, int boardHeight)
 	{

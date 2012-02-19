@@ -106,10 +106,7 @@ public class JBufferedCanvas extends JPanel
     
     /**
      * Draws an area of the background image to the corresponding area of the offscreen image
-     * @param x left side of the area to clear
-     * @param y top of the area to clear
-     * @param width width of the area to clear
-     * @param height height of the area to clear
+     * @param r the area to clear
      */
     public void clear(Rectangle r)
     {

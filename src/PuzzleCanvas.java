@@ -19,6 +19,8 @@
 
 /**
  * Changelog:
+ * 2012 02 14 - Jon
+ *  - Added guiImagePath parameter to the constructor so PuzzleCanvas knows where to look for cursor images.
  * 
  * 2011 12 19 - Jon
  *  - Finished implementing save and load functions
@@ -110,12 +112,12 @@ public class PuzzleCanvas extends JBufferedCanvas
 	private Shape [] tileMasks;
 	private Shape [] rotatedMasks;
 
-	public PuzzleCanvas(Dimension size)
+	public PuzzleCanvas(Dimension size,String guiImagePath)
 	{
 		super(new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB));
 
-		cwImage = MiscUtils.loadImage("images/cwcursor.png",CURSOR_SIZE,CURSOR_SIZE);
-		ccwImage = MiscUtils.loadImage("images/ccwcursor.png",CURSOR_SIZE,CURSOR_SIZE);
+		cwImage = MiscUtils.loadImage(guiImagePath+"/cwcursor.png",CURSOR_SIZE,CURSOR_SIZE);
+		ccwImage = MiscUtils.loadImage(guiImagePath+"/ccwcursor.png",CURSOR_SIZE,CURSOR_SIZE);
 
 		setMinimumSize(size);
 		setMaximumSize(size);

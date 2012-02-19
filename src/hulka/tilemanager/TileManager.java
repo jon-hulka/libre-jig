@@ -57,11 +57,11 @@ public interface TileManager
 	
 	/**
 	 * Converts a flattened tile index to its 2-dimensional equivalent.
-	 * This function is the inverse of {@link # getFlatIndex(Point)}
+	 * This function is the inverse of {@link #getFlatIndex(Point)}
 	 * For values of flatIndex in the range of 0 to getTileCount(), getFlatIndex(getExpandedIndex(flatIndex,aPoint)) must equal flatIndex
 	 * The result is stored in the second parameter and returned for convenience.
 	 * @param flatIndex flattened index.
-	 * @param tileIndex storage for the return value, or null
+	 * @param expandedIndex storage for the return value, or null
 	 * @return the 2-dimensional tile index, or null if flatIndex is not in the correct range.
 	 */
 	public Point getExpandedIndex(int flatIndex, Point expandedIndex);
@@ -206,7 +206,7 @@ public interface TileManager
 	/**
 	 * Returns the index of the neighboring position in the indicated direction, taking into account tile rotation.
 	 * @param flatIndex tile index.
-	 * @param direction direction to search. This should be in the range of 0 to {@link getRotationSteps()} - 1.
+	 * @param direction direction to search. This should be in the range of 0 to {@link #getRotationSteps()} - 1.
 	 * @return index of the neighbor, or -1 if there is no neighbor in the given direction.
 	 */
 	public int getNeighborIndex(int flatIndex, int direction);

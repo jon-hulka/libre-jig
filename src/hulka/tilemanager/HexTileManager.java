@@ -92,7 +92,7 @@ public class HexTileManager extends AbstractTileManagerImpl
 	 * @param height Board height
 	 * @param count Number of tiles to calculate for.
 	 * @param fitEdgeTiles Are edge tiles to be adjusted to fit?
-	 * @param d Storage for return parameters - if null a new {@link TileDescriptor} will be allocated.
+	 * @param d Storage for return parameters - if null a new {@link TileSetDescriptor} will be allocated.
 	 * @return A {@link TileSetDescriptor} with boardWidth, boardHeight, tilesAcross, tilesDown and tileCount set to their calculated values.
 	 * Note that the resulting tileCount may be larger than the input count value.
 	 */

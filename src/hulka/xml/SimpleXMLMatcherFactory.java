@@ -95,7 +95,7 @@ public class SimpleXMLMatcherFactory
 	
 	/**
 	 * Returns a pattern matcher for XML names
-	 * @param name initial input for the matcher
+	 * @param value initial input for the matcher
 	 * @return a pattern matcher for XML names
 	 */
 	public static Matcher getNameMatcher(String value)
