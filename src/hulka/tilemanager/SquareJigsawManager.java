@@ -18,6 +18,9 @@
 /**
  * Changelog:
  * 
+ * 2012 02 23 - Jon
+ * Added getOldBoardSize to allow save file dimensions to be passed out (see notes in JigsawHandler)
+ * 
  * 2012 02 02 - Jon
  *  - Implemented scaling when loading a puzzle on a different screen resolution.
  * 
@@ -295,6 +298,7 @@ public class SquareJigsawManager extends SquareTileManager
 		{
 			//Use the 'scaling' constructor
 			result=new SquareJigsawManager(oldDescriptor, boardSize.width, boardSize.height);
+			result.oldBoardSize=new Dimension(oldDescriptor.boardWidth, oldDescriptor.boardHeight);
 			result.initCutter();
 			if(!result.cutter.load(in,err,oldDescriptor.tileWidth,oldDescriptor.tileHeight,result.descriptor.tileWidth,result.descriptor.tileHeight))
 			{
@@ -341,5 +345,15 @@ public class SquareJigsawManager extends SquareTileManager
 			descriptor=oldDescriptor;
 		}
 		return descriptor;
+	}
+
+	private Dimension oldBoardSize=null;
+	/**
+	 * If this SquareJigsawManager results from calling the {@link #load(BufferedReader, PrintWriter,Dimension)}, returns the old tile set dimensions.
+	 * @return boardSize from the save file, before scaling, or null if this TileManager was not loaded from a file.
+	 */
+	public Dimension getOldBoardSize()
+	{
+		return oldBoardSize;
 	}
 }

@@ -90,6 +90,10 @@ public class PuzzleLoader
 			}
 			puzzleHandler=null;
 			toggleMenus(null);
+			PuzzleCanvas canvas=gui.getBoardCanvas();
+			canvas.erase();
+			canvas.clear();
+			canvas.repaint();
 		}
 
 		return ok;

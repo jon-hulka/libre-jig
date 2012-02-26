@@ -106,8 +106,8 @@ public abstract class AbstractTileManagerImpl implements TileManager
 	}
 
 	/**
-	 * @param boardWidth Width of the play area, in pixels.
-	 * @param boardHeight Height of the play area, in pixels.
+	 * @param boardWidth Width of the tile set, in pixels.
+	 * @param boardHeight Height of the tile set, in pixels.
 	 * @param tilesAcross Column count - not necessarily the number of tiles in each row.
 	 * @param tilesDown Row count - not necessarily the number of tiles in each column.
 	 * @param fitEdgeTiles Indicates whether edge tiles will be adjusted to fit the board.
